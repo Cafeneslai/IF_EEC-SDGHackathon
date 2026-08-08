@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="cyan">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EEC Journey - Smart & Interactive AI Travel Portal</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Font: Kanit -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- MapLibre GL JS & CSS (สำหรับแผนที่ 3D) -->
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#0F172A',
+                        navyCard: '#1E293B',
+                        appbg: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* DYNAMIC THEME SYSTEM (CSS VARIABLES) */
+        :root[data-theme="cyan"] {
+            --brand-primary: #1677FF;
+            --brand-secondary: #20D9E8;
+            --brand-accent: #FF8A3D;
+            --brand-gradient: linear-gradient(135deg, #20D9E8 0%, #1677FF 100%);
+            --brand-light: rgba(32, 217, 232, 0.12);
+            --brand-glow: rgba(32, 217, 232, 0.4);
+        }
+
+        :root[data-theme="sunset"] {
+            --brand-primary: #ea580c;
+            --brand-secondary: #f97316;
+            --brand-accent: #0284c7;
+            --brand-gradient: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+            --brand-light: rgba(249, 115, 22, 0.12);
+            --brand-glow: rgba(249, 115, 22, 0.4);
+        }
+
+        :root[data-theme="emerald"] {
+            --brand-primary: #059669;
+            --brand-secondary: #10b981;
+            --brand-accent: #f59e0b;
+            --brand-gradient: linear-gradient(135deg, #34d399 0%, #059669 100%);
+            --brand-light: rgba(16, 185, 129, 0.12);
+            --brand-glow: rgba(16, 185, 129, 0.4);
+        }
+
+        :root[data-theme="violet"] {
+            --brand-primary: #7c3aed;
+            --brand-secondary: #a855f7;
+            --brand-accent: #f43f5e;
+            --brand-gradient: linear-gradient(135deg, #c084fc 0%, #7c3aed 100%);
+            --brand-light: rgba(168, 85, 247, 0.12);
+            --brand-glow: rgba(168, 85, 247, 0.4);
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* LIGHT & DARK MODE COMPONENT STYLES */
+        body.light {
+            background-color: #F8FAFC;
+            color: #0F172A;
+        }
+        body.dark {
+            background-color: #090D16;
+            color: #F1F5F9;
+        }
+
+        /* Dynamic Theme Utility Classes */
+        .theme-bg-gradient { background: var(--brand-gradient); }
+        .theme-text-sec { color: var(--brand-secondary); }
+        .theme-text-pri { color: var(--brand-primary); }
+        .theme-bg-light { background-color: var(--brand-light); }
+        .theme-border-sec { border-color: var(--brand-secondary); }
+        
+        .theme-btn-primary {
+            background: var(--brand-gradient);
+            color: #ffffff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .theme-btn-primary:hover {
+            box-shadow: 0 10px 25px -5px var(--brand-glow);
+            transform: translateY(-2px);
+        }
+
+        /* Adaptive Cards for Dark/Light Mode */
+        .ux-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        body.light .ux-card, body.light .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            color: #0F172A;
+        }
+        body.dark .ux-card, body.dark .glass-card {
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            color: #F8FAFC;
+        }
+        
+        .ux-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Adaptive inner elements */
+        body.dark .bg-slate-50 {
+            background-color: #0F172A !important;
+            border-color: #334155 !important;
+            color: #F8FAFC !important;
+        }
+        body.dark .text-navy {
+            color: #F8FAFC !important;
+        }
+        body.dark .text-slate-500, body.dark .text-slate-600 {
+            color: #94A3B8 !important;
+        }
+        body.dark .border-slate-200 {
+            border-color: #334155 !important;
+        }
+
+        /* Hide Scrollbar */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Ticket Notch Design */
+        .ticket-card {
+            position: relative;
+            border-radius: 20px;
+        }
+        .ticket-card::before, .ticket-card::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            transform: translateY(-50%);
+            transition: background-color 0.3s ease;
+        }
+        body.light .ticket-card::before, body.light .ticket-card::after { background-color: #F8FAFC; }
+        body.dark .ticket-card::before, body.dark .ticket-card::after { background-color: #090D16; }
+        .ticket-card::before { left: -10px; }
+        .ticket-card::after { right: -10px; }
+
+        /* Map Navigation Styling
+           Green = destination
+           Blue = active route
+           Orange = checkpoint
+           Yellow = checkpoint already passed
+           Blue arrow = current position
+        */
+        .map-marker-pin {
+            background: rgba(15, 23, 42, 0.94);
+            border: 2px solid #f97316;
+            backdrop-filter: blur(8px);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+        }
+        .map-marker-pin:hover { transform: scale(1.08); }
+
+        .map-marker-pin.checkpoint {
+            border-color: #f97316;
+            background: rgba(124, 45, 18, 0.95);
+        }
+        .map-marker-pin.checkpoint.passed {
+            border-color: #facc15;
+            background: rgba(113, 63, 18, 0.95);
+        }
+        .map-marker-pin.destination {
+            border-color: #22c55e;
+            background: rgba(20, 83, 45, 0.96);
+            box-shadow: 0 0 0 4px rgba(34,197,94,0.18), 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .map-marker-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            flex: 0 0 12px;
+            background: #f97316;
+            box-shadow: 0 0 0 3px rgba(249,115,22,0.20);
+        }
+        .checkpoint.passed .map-marker-dot {
+            background: #facc15;
+            box-shadow: 0 0 0 3px rgba(250,204,21,0.20);
+        }
+        .destination .map-marker-dot {
+            background: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34,197,94,0.22);
+        }
+
+        .current-location-marker {
+            width: 34px;
+            height: 34px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.45));
+        }
+        .current-location-marker .arrow {
+            width: 0;
+            height: 0;
+            border-left: 9px solid transparent;
+            border-right: 9px solid transparent;
+            border-bottom: 24px solid #3b82f6;
+            transform: rotate(0deg);
+            filter: drop-shadow(0 0 4px rgba(59,130,246,0.85));
+        }
+        .current-location-marker .pulse {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid rgba(59,130,246,0.55);
+            animation: currentLocationPulse 1.8s ease-out infinite;
+        }
+        @keyframes currentLocationPulse {
+            0% { transform: scale(0.65); opacity: 0.9; }
+            100% { transform: scale(1.35); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="light min-h-screen flex flex-col">
+
+    <!-- DESKTOP TOP NAVBAR WITH SEARCH, DARK MODE & THEME SWITCHER -->
+    <header class="bg-navy text-white sticky top-0 z-50 shadow-xl border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-6 py-3.5 flex justify-between items-center gap-4">
+            
+            <!-- Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer group shrink-0" onclick="switchTab('home')">
+                <div class="theme-bg-gradient p-2.5 rounded-2xl text-white text-lg flex items-center justify-center w-10 h-10 shadow-lg group-hover:scale-105 transition">
+                    <i class="fa-solid fa-compass"></i>
+                </div>
+                <div class="hidden sm:block">
+                    <span class="text-xl font-extrabold tracking-wide text-white">EEC <span class="theme-text-sec">Journey</span></span>
+                    <p class="text-[11px] theme-text-sec font-light -mt-1 opacity-90">Smart AI Travel Companion</p>
+                </div>
+            </div>
+
+            <!-- SEARCH BAR IN HEADER -->
+            <div class="relative flex-1 max-w-xs md:max-w-sm">
+                <div class="relative">
+                    <input type="text" id="nav-search-input" onkeyup="handleQuickSearch(event)" placeholder="🔍 ค้นหาสถานที่, เทศกาล, คาเฟ่, คูปอง..." class="w-full bg-slate-800/90 text-white placeholder-slate-400 text-xs rounded-xl pl-9 pr-8 py-2 border border-slate-700 focus:outline-none focus:border-cyan-400 transition">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    <button onclick="triggerSearchModalFromNav()" class="absolute right-2 top-1.5 text-xs bg-slate-700 hover:bg-slate-600 px-2 py-0.5 rounded text-slate-300">ค้นหา</button>
+                </div>
+            </div>
+
+            <!-- Main Navigation Links -->
+            <nav class="hidden lg:flex items-center space-x-1 bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700">
+                <button onclick="switchTab('home')" id="nav-home" class="nav-btn px-4 py-2 rounded-xl text-xs font-bold theme-text-sec bg-navy shadow transition">
+                    <i class="fa-solid fa-house mr-1"></i> หน้าแรก
+                </button>
+                <button onclick="switchTab('ai')" id="nav-ai" class="nav-btn px-4 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1 theme-text-sec"></i> AI จัดทริป
+                </button>
+                <button onclick="switchTab('map')" id="nav-map" class="nav-btn px-4 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-map-location-dot mr-1 text-amber-400"></i> แผนที่
+                </button>
+                <button onclick="switchTab('coupons')" id="nav-coupons" class="nav-btn px-4 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-ticket mr-1 text-yellow-400"></i> คูปอง
+                </button>
+                <button onclick="switchTab('more')" id="nav-more" class="nav-btn px-4 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white transition">
+                    <i class="fa-solid fa-user mr-1"></i> บัญชี
+                </button>
+            </nav>
+
+            <!-- UX FEATURE: DARK MODE & THEME SWITCHER -->
+            <div class="flex items-center space-x-2.5 shrink-0">
+                
+                <!-- Dark / Light Mode Toggle Button -->
+                <button onclick="toggleDarkMode()" id="dark-mode-btn" title="สลับโหมดมืด/สว่าง" class="bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded-xl border border-slate-700 text-xs font-bold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-sun" id="dark-mode-icon"></i>
+                    <span class="hidden md:inline text-white text-[11px]" id="dark-mode-text">โหมดสว่าง</span>
+                </button>
+
+                <!-- Theme Color Selector -->
+                <div class="hidden sm:flex items-center space-x-1.5 bg-slate-800 px-2.5 py-1.5 rounded-2xl border border-slate-700">
+                    <button onclick="setTheme('cyan')" title="Cyan Ocean" class="w-4 h-4 rounded-full bg-cyan-400 hover:scale-125 transition border border-white/30"></button>
+                    <button onclick="setTheme('sunset')" title="Sunset Orange" class="w-4 h-4 rounded-full bg-orange-500 hover:scale-125 transition border border-white/30"></button>
+                    <button onclick="setTheme('emerald')" title="Emerald Eco" class="w-4 h-4 rounded-full bg-emerald-500 hover:scale-125 transition border border-white/30"></button>
+                    <button onclick="setTheme('violet')" title="Neon Violet" class="w-4 h-4 rounded-full bg-purple-500 hover:scale-125 transition border border-white/30"></button>
+                </div>
+
+                <!-- Manual Guide Button -->
+                <button onclick="triggerModal('welcome-modal')" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-700 transition flex items-center gap-1">
+                    <i class="fa-solid fa-circle-question theme-text-sec"></i>
+                    <span class="hidden sm:inline">คู่มือ</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN DASHBOARD CONTENT AREA -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- 1. HOME PAGE -->
+        <section id="page-home" class="space-y-8">
+            
+            <!-- Hero Banner With Interactive Search -->
+            <div class="relative rounded-3xl overflow-hidden shadow-2xl text-white p-6 md:p-12 bg-cover bg-center flex flex-col justify-center min-h-[380px]" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80');">
+                <div class="absolute inset-0 bg-gradient-to-r from-navy via-navy/85 to-transparent"></div>
+                
+                <div class="relative z-10 max-w-2xl space-y-4">
+                    <span class="theme-bg-light border theme-border-sec theme-text-sec text-xs px-4 py-1.5 rounded-full font-bold inline-block backdrop-blur">
+                        ✨ AI-Powered EEC Travel Companion
+                    </span>
+                    <h1 class="text-3xl md:text-5xl font-black leading-tight tracking-wide">
+                        วางแผนทริป EEC ชลบุรี ระยอง ฉะเชิงเทรา ในแบบของคุณ
+                    </h1>
+                    <p class="text-xs md:text-sm text-slate-300 font-light leading-relaxed">
+                        ระบบ AI ช่วยวางแผนตารางเวลา คำนวณเส้นทาง แนะนำสถานที่ตามเทศกาล และส่วนลดร้านค้าชุมชน
+                    </p>
+
+                    <!-- SEARCH BAR IN HERO BANNER -->
+                    <div class="pt-2">
+                        <div class="bg-white/10 backdrop-blur-md p-2 rounded-2xl border border-white/20 flex flex-col sm:flex-row gap-2 shadow-2xl">
+                            <div class="relative flex-1">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                                <input type="text" id="hero-search-input" onkeyup="if(event.key==='Enter') executeSearch('hero')" placeholder="ค้นหาเทศกาล, คาเฟ่บางแสน, สวนผลไม้, ตลาดโบราณ..." class="w-full bg-slate-900/80 text-white placeholder-slate-400 text-xs rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                            </div>
+                            <button onclick="executeSearch('hero')" class="theme-btn-primary font-bold px-6 py-3 rounded-xl text-xs flex items-center justify-center gap-2 shrink-0">
+                                <i class="fa-solid fa-magnifying-glass"></i> ค้นพบทันที
+                            </button>
+                        </div>
+                        
+                        <!-- Quick Search Keyword Tags -->
+                        <div class="flex flex-wrap gap-1.5 mt-2.5 text-[11px] text-slate-300 items-center">
+                            <span class="text-slate-400"><i class="fa-solid fa-fire text-amber-400 mr-1"></i>ค้นหายอดฮิต:</span>
+                            <button onclick="quickSearchTag('ผลไม้')" class="bg-white/10 hover:bg-white/20 px-2.5 py-0.5 rounded-lg border border-white/10 transition">🍓 งานผลไม้ระยอง</button>
+                            <button onclick="quickSearchTag('วิ่งควาย')" class="bg-white/10 hover:bg-white/20 px-2.5 py-0.5 rounded-lg border border-white/10 transition">🐃 ประเพณีวิ่งควาย</button>
+                            <button onclick="quickSearchTag('บางแสน')" class="bg-white/10 hover:bg-white/20 px-2.5 py-0.5 rounded-lg border border-white/10 transition">🌊 บางแสน</button>
+                            <button onclick="quickSearchTag('หลวงพ่อโสธร')" class="bg-white/10 hover:bg-white/20 px-2.5 py-0.5 rounded-lg border border-white/10 transition">🪔 หลวงพ่อโสธร</button>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex flex-wrap gap-3">
+                        <button onclick="switchTab('ai')" class="theme-btn-primary font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-xl flex items-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> ให้ AI จัดทริปอัตโนมัติ
+                        </button>
+                        <button onclick="switchTab('map')" class="bg-white/10 backdrop-blur text-white font-bold px-5 py-2.5 rounded-xl text-xs hover:bg-white/20 transition flex items-center gap-2 border border-white/20">
+                            <i class="fa-solid fa-map-location-dot theme-text-sec"></i> สำรวจแผนที่ EEC
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🎉 SEASONAL & FESTIVAL RECOMMENDATION SYSTEM -->
+            <div class="space-y-4">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-2">
+                    <div>
+                        <span class="theme-bg-light theme-text-sec text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">🎉 Seasonal Highlights</span>
+                        <h2 class="text-2xl font-black text-navy mt-1">แนะนำสถานที่ & ทริปตามเทศกาล EEC</h2>
+                        <p class="text-xs text-slate-500">เลือกดูงานประเพณีและกิจกรรมเด่นประจำแต่ละช่วงเวลาในกลุ่มจังหวัด EEC</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <button onclick="filterFestival('fruit')" id="fest-btn-fruit" class="fest-tab-btn bg-amber-500 text-white font-bold px-3.5 py-1.5 rounded-xl shadow transition">🍓 พ.ค.-ก.ค. (ผลไม้)</button>
+                        <button onclick="filterFestival('songkran')" id="fest-btn-songkran" class="fest-tab-btn bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium px-3.5 py-1.5 rounded-xl hover:bg-slate-300 transition">🌊 เม.ย. (วันไหล)</button>
+                        <button onclick="filterFestival('buffalo')" id="fest-btn-buffalo" class="fest-tab-btn bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium px-3.5 py-1.5 rounded-xl hover:bg-slate-300 transition">🐃 ต.ค. (วิ่งควาย)</button>
+                        <button onclick="filterFestival('sothon')" id="fest-btn-sothon" class="fest-tab-btn bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium px-3.5 py-1.5 rounded-xl hover:bg-slate-300 transition">🪔 พ.ย. (หลวงพ่อโสธร)</button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Festival Spotlight Card -->
+                <div id="festival-display-card" class="ux-card glass-card p-6 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden">
+                    <!-- Content dynamic generated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Dashboard Grid (3 Columns on Desktop) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Col 1 & 2: Recommended Trip & Featured Places -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- Trip of the Week Card -->
+                    <div class="ux-card glass-card p-6 rounded-3xl shadow-sm space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="bg-amber-500/10 text-amber-600 text-xs font-bold px-3 py-1 rounded-md">🌴 EEC Recommended Route</span>
+                                <h3 class="font-extrabold text-navy text-xl mt-1">ชลบุรี → ระยอง → ฉะเชิงเทรา</h3>
+                            </div>
+                            <span class="theme-bg-light theme-text-sec text-xs font-extrabold px-3 py-1.5 rounded-xl">⭐ 4.9 Rating</span>
+                        </div>
+                        <p class="text-xs text-slate-500">ทริปยอดนิยมสำหรับวันหยุดสุดสัปดาห์ (1 Day Trip: 08:30 - 18:00 น.) | งบประมาณแนะนำ ฿1,500/ท่าน</p>
+                        
+                        <div class="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-xs">
+                            <div class="space-y-1">
+                                <span class="text-slate-400 font-medium">09:00 น.</span>
+                                <p class="font-bold text-navy">🌊 หาดบางแสน</p>
+                                <p class="text-[10px] text-slate-500">สัมผัสรับลมทะเลชลบุรี</p>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="text-slate-400 font-medium">11:30 น.</span>
+                                <p class="font-bold text-navy">☕ XYZ Café ระยอง</p>
+                                <p class="text-[10px] text-slate-500">จิบกาแฟสดบรรยากาศชิลล์</p>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="text-slate-400 font-medium">15:00 น.</span>
+                                <p class="font-bold text-navy">⛩️ ตลาดคลองสวน</p>
+                                <p class="text-[10px] text-slate-500">ชิมของอร่อยแปดริ้ว</p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-1">
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <i class="fa-solid fa-car theme-text-pri"></i>
+                                <span>ระยะทางรวมประมาณ 68 km</span>
+                            </div>
+                            <button onclick="switchTab('map')" class="bg-navy hover:bg-slate-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-1.5">
+                                เปิดดูแผนที่เส้นทางนี้ <i class="fa-solid fa-arrow-right theme-text-sec"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Featured Places Grid -->
+                    <div class="space-y-3">
+                        <h2 class="text-lg font-bold text-navy flex items-center gap-2">
+                            <i class="fa-solid fa-fire text-red-500"></i> สถานที่ยอดนิยมในพื้นที่ EEC
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Place 1 -->
+                            <div onclick="switchTab('ai')" class="ux-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 cursor-pointer">
+                                <div class="h-32 bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80');">
+                                    <span class="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2.5 py-1 rounded-full backdrop-blur">📍 ชลบุรี</span>
+                                </div>
+                                <div class="p-3.5 space-y-1">
+                                    <h4 class="font-bold text-xs text-navy">หาดบางแสน & คาเฟ่ลับ</h4>
+                                    <p class="text-[10px] text-slate-500">❤️ บันทึกไว้ 1.2k คน</p>
+                                </div>
+                            </div>
+                            <!-- Place 2 -->
+                            <div onclick="switchTab('ai')" class="ux-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 cursor-pointer">
+                                <div class="h-32 bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80');">
+                                    <span class="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2.5 py-1 rounded-full backdrop-blur">📍 ระยอง</span>
+                                </div>
+                                <div class="p-3.5 space-y-1">
+                                    <h4 class="font-bold text-xs text-navy">สวนผลไม้ชุมชนบ้านค่าย</h4>
+                                    <p class="text-[10px] text-slate-500">📍 ห่างจากคุณ 12 km</p>
+                                </div>
+                            </div>
+                            <!-- Place 3 -->
+                            <div onclick="switchTab('ai')" class="ux-card bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 cursor-pointer">
+                                <div class="h-32 bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=600&q=80');">
+                                    <span class="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2.5 py-1 rounded-full backdrop-blur">📍 ฉะเชิงเทรา</span>
+                                </div>
+                                <div class="p-3.5 space-y-1">
+                                    <h4 class="font-bold text-xs text-navy">ตลาดโบราณคลองสวน</h4>
+                                    <p class="text-[10px] text-slate-500">⭐ 4.8 ความนิยมสูง</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Col 3: Side Widgets -->
+                <div class="space-y-6">
+                    
+                    <!-- Coupon Offer Banner -->
+                    <div class="ux-card bg-gradient-to-br from-amber-500 to-orange-600 text-white p-6 rounded-3xl shadow-lg space-y-4">
+                        <span class="bg-white/20 text-white text-[10px] font-bold px-2.5 py-1 rounded uppercase">🎁 Special Offer</span>
+                        <h3 class="font-extrabold text-xl">คูปองส่วนลด EEC Local</h3>
+                        <p class="text-xs text-amber-100 leading-relaxed">
+                            รับส่วนลดสูงสุด 15% จากร้านกาแฟ ร้านอาหาร และโฮมสเตย์ชุมชนในจังหวัด ชลบุรี ระยอง ฉะเชิงเทรา
+                        </p>
+                        <button onclick="switchTab('coupons')" class="w-full bg-white text-orange-600 font-extrabold py-2.5 rounded-xl text-xs shadow hover:bg-amber-50 transition">
+                            ดูคูปองทั้งหมด →
+                        </button>
+                    </div>
+
+                    <!-- GPS Location Widget -->
+                    <div class="ux-card bg-navy text-white p-5 rounded-3xl space-y-3 border border-slate-800">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold theme-text-sec flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-green-400 animate-ping"></span> GPS Connected
+                            </span>
+                            <span class="text-[10px] bg-slate-800 px-2.5 py-0.5 rounded text-slate-300">EEC Zone</span>
+                        </div>
+                        <p class="text-xs text-slate-300">ตำแหน่งปัจจุบัน: <strong class="text-white">ตำบลแสนสุข อ.เมืองชลบุรี</strong></p>
+                        <button onclick="alert('อัปเดตพิกัดเรียบร้อยแล้ว!')" class="w-full bg-slate-800 hover:bg-slate-700 theme-text-sec text-xs font-bold py-2 rounded-xl border border-slate-700 transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-arrows-rotate"></i> รีเฟรชตำแหน่ง
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 2. AI TRIP PLANNER PAGE -->
+        <section id="page-ai" class="hidden space-y-6">
+            <div class="text-center max-w-xl mx-auto space-y-2">
+                <span class="theme-bg-light theme-text-sec text-xs px-3.5 py-1 rounded-full font-bold inline-block border theme-border-sec">Interactive Planner</span>
+                <h2 class="text-2xl md:text-3xl font-black text-navy">ให้ AI ช่วยวางแผนทริปใน EEC ✨</h2>
+                <p class="text-xs text-slate-500">เลือกวัน เวลา และสไตล์เที่ยวที่คุณชอบ แล้วให้ AI คำนวณเส้นทางที่คุ้มค่าที่สุด</p>
+            </div>
+
+            <div class="ux-card bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 max-w-4xl mx-auto space-y-6">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Age Selection -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-navy flex items-center gap-2">
+                            <span class="theme-bg-gradient text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center">1</span>
+                            กลุ่มอายุของคุณ
+                        </label>
+                        <div class="grid grid-cols-4 gap-2 text-xs">
+                            <button type="button" onclick="selectAge(this)" class="age-btn border border-slate-300 py-2.5 rounded-xl font-medium text-center">18-25</button>
+                            <button type="button" onclick="selectAge(this)" class="age-btn border theme-border-sec theme-bg-light font-bold py-2.5 rounded-xl text-center">26-35</button>
+                            <button type="button" onclick="selectAge(this)" class="age-btn border border-slate-300 py-2.5 rounded-xl font-medium text-center">36-50</button>
+                            <button type="button" onclick="selectAge(this)" class="age-btn border border-slate-300 py-2.5 rounded-xl font-medium text-center">50+</button>
+                        </div>
+                    </div>
+
+                    <!-- Date & Time Selection -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-navy flex items-center gap-2">
+                            <span class="theme-bg-gradient text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center">2</span>
+                            📅 วันที่และระยะเวลาเดินทาง
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <span class="text-[10px] text-slate-400 font-medium">วันที่เริ่มต้น:</span>
+                                <input type="date" id="trip-date-input" value="2026-08-08" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-navy focus:outline-none">
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 font-medium">รูปแบบเวลา:</span>
+                                <select id="trip-duration-select" onchange="selectDurationFromSelect(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-navy focus:outline-none">
+                                    <option value="1 Day Trip">☀️ 1 Day Trip (08:00 - 18:00)</option>
+                                    <option value="2 Days 1 Night">🌙 2 วัน 1 คืน (ค้างคืน)</option>
+                                    <option value="Half Day Morning">☕ ครึ่งวันเช้า (08:00 - 13:00)</option>
+                                    <option value="Half Day Afternoon">🌅 ครึ่งวันบ่าย (14:00 - 20:00)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Travel Style Chips -->
+                    <div class="space-y-2 md:col-span-2">
+                        <label class="text-xs font-bold text-navy flex items-center gap-2">
+                            <span class="theme-bg-gradient text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center">3</span>
+                            สไตล์เที่ยวที่คุณสนใจ (เลือกได้หลายข้อ)
+                        </label>
+                        <div class="flex flex-wrap gap-2 text-xs">
+                            <button type="button" onclick="toggleStyle(this)" class="style-chip border theme-border-sec theme-bg-light font-bold px-4 py-2 rounded-full">☕ Café สายคาเฟ่</button>
+                            <button type="button" onclick="toggleStyle(this)" class="style-chip border border-slate-200 px-4 py-2 rounded-full">🌊 Nature รับลมทะเล</button>
+                            <button type="button" onclick="toggleStyle(this)" class="style-chip border theme-border-sec theme-bg-light font-bold px-4 py-2 rounded-full">🍜 Food ตระเวนทาน</button>
+                            <button type="button" onclick="toggleStyle(this)" class="style-chip border border-slate-200 px-4 py-2 rounded-full">📸 Photography ถ่ายรูป</button>
+                            <button type="button" onclick="toggleStyle(this)" class="style-chip border border-slate-200 px-4 py-2 rounded-full">🏘️ Local Community ชุมชน</button>
+                            <button type="button" onclick="toggleStyle(this)" class="style-chip border border-slate-200 px-4 py-2 rounded-full">🎉 Festival เที่ยวงานเทศกาล</button>
+                        </div>
+                    </div>
+
+                    <!-- Companion -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-navy flex items-center gap-2">
+                            <span class="theme-bg-gradient text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center">4</span>
+                            ผู้ร่วมเดินทาง
+                        </label>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <button type="button" onclick="selectCompanion(this)" class="comp-btn border border-slate-200 p-2.5 rounded-xl text-left">👤 คนเดียว</button>
+                            <button type="button" onclick="selectCompanion(this)" class="comp-btn border theme-border-sec theme-bg-light font-bold p-2.5 rounded-xl text-left">💑 คู่รัก</button>
+                            <button type="button" onclick="selectCompanion(this)" class="comp-btn border border-slate-200 p-2.5 rounded-xl text-left">👨‍👩‍👧‍👦 ครอบครัว</button>
+                            <button type="button" onclick="selectCompanion(this)" class="comp-btn border border-slate-200 p-2.5 rounded-xl text-left">👯‍♂️ กลุ่มเพื่อน</button>
+                        </div>
+                    </div>
+
+                    <!-- Budget Range Slider -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-bold text-navy flex items-center gap-2">
+                                <span class="theme-bg-gradient text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center">5</span>
+                                งบประมาณประมาณการ
+                            </label>
+                            <span id="budget-value" class="text-sm font-extrabold text-amber-600">฿2,500</span>
+                        </div>
+                        <input type="range" min="500" max="5000" step="250" value="2500" oninput="updateBudget(this.value)" class="w-full accent-orange-500 cursor-pointer mt-2">
+                        <div class="flex justify-between text-[10px] text-slate-400 font-medium">
+                            <span>฿500</span>
+                            <span>฿2,500</span>
+                            <span>฿5,000+</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Submit Button -->
+                <button onclick="startAIGeneration()" class="w-full theme-btn-primary font-extrabold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 text-base">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ AI เริ่มประมวลผลจัดทริป!
+                </button>
+
+            </div>
+        </section>
+
+        <!-- 3. MAP & SCHEDULE PAGE -->
+        <section id="page-map" class="hidden space-y-4">
+            
+            <div class="flex flex-col lg:flex-row gap-6">
+                
+                <!-- Timeline Schedule (1/3 Width) -->
+                <div class="w-full lg:w-1/3 space-y-4">
+                    
+                    <div class="glass-card p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex justify-between items-center border-b pb-3">
+                            <div>
+                                <h3 class="font-extrabold text-navy text-base">🗓️ ตารางเวลาเดินทาง</h3>
+                                <p id="selected-date-display" class="text-xs theme-text-sec font-bold mt-0.5">📅 ทริปวันที่: 8 ส.ค. 2026</p>
+                            </div>
+                            <span id="selected-duration-display" class="bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-lg">☀️ 1 Day Trip</span>
+                        </div>
+
+                        <!-- Timeline Items -->
+                        <div class="space-y-3 text-xs">
+                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1 cursor-pointer hover:border-cyan-400 transition" onclick="focusMapPoint(100.9022, 13.2828)">
+                                <div class="flex justify-between font-bold text-navy">
+                                    <span>09:00 - 11:00 น.</span>
+                                    <span class="theme-text-pri">จุดที่ 1</span>
+                                </div>
+                                <p class="font-semibold text-slate-700">🌊 รับลมทะเล หาดบางแสน (ชลบุรี)</p>
+                                <p class="text-[10px] text-slate-400">เดินเล่นถ่ายรูป ชิมส้มตำริมหาด</p>
+                            </div>
+
+                            <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl space-y-1 cursor-pointer hover:border-amber-400 transition" onclick="focusMapPoint(100.9080, 13.2890)">
+                                <div class="flex justify-between font-bold text-amber-900">
+                                    <span>11:30 - 13:00 น.</span>
+                                    <span class="text-amber-600">จุดที่ 2 (แนะนำใหม่)</span>
+                                </div>
+                                <p class="font-semibold text-amber-900">☕ XYZ Café ระยอง</p>
+                                <p class="text-[10px] text-amber-700">เปลี่ยนสลับจาก ABC Café เพื่อหลีกเลี่ยงคนแน่น</p>
+                            </div>
+
+                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-1 cursor-pointer hover:border-cyan-400 transition" onclick="focusMapPoint(100.9150, 13.2950)">
+                                <div class="flex justify-between font-bold text-navy">
+                                    <span>15:00 - 17:00 น.</span>
+                                    <span class="theme-text-pri">จุดที่ 3</span>
+                                </div>
+                                <p class="font-semibold text-slate-700">⛩️ ตลาดโบราณคลองสวน (ฉะเชิงเทรา)</p>
+                                <p class="text-[10px] text-slate-400">ชิมของอร่อย ซื้อของฝากอัตลักษณ์</p>
+                            </div>
+                        </div>
+
+                        <button onclick="alert('เริ่มนำทางด้วย GPS...')" class="w-full bg-navy hover:bg-slate-800 text-white font-extrabold py-3 rounded-xl text-xs shadow transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-location-arrow theme-text-sec"></i> เริ่มออกเดินทางตามตารางเวลา
+                        </button>
+                    </div>
+
+                    <!-- Reroute Alert -->
+                    <div id="reroute-banner" class="bg-slate-900 border border-red-500/50 p-4 rounded-3xl text-white space-y-3 shadow-xl">
+                        <div class="flex items-start gap-2.5">
+                            <span class="text-red-400 text-xl">⚠️</span>
+                            <div>
+                                <p class="font-bold text-red-300 text-xs">แจ้งเตือนความหนาแน่น!</p>
+                                <p class="text-[11px] text-slate-300 mt-0.5">ช่วงเวลา 11:30 น. "ABC Café" มีคนหนาแน่นสูง</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800 p-3 rounded-2xl text-xs flex justify-between items-center">
+                            <div>
+                                <p class="font-bold theme-text-sec">☕ AI แนะนำ: XYZ Café</p>
+                                <p class="text-[10px] text-slate-400">ห่างไป 2.3 km • คนน้อยกว่า 42%</p>
+                            </div>
+                            <button onclick="acceptReroute()" class="theme-btn-primary font-extrabold px-3 py-1.5 rounded-lg text-xs shadow">
+                                สลับจุดหมาย
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- 🗺️ REALISTIC 3D MAP CANVAS (2/3 Width) -->
+                <div class="w-full lg:w-2/3 bg-slate-900 rounded-3xl overflow-hidden min-h-[550px] h-[550px] relative shadow-2xl border border-slate-800">
+                    
+                    <!-- MapLibre GL 3D Map Div Container -->
+                    <div id="eec-3d-map" class="w-full h-full"></div>
+
+                    <!-- Navigation Legend -->
+                    <div class="absolute top-4 right-4 z-10 bg-slate-900/85 backdrop-blur-md p-3 rounded-2xl border border-white/10 text-white shadow-lg text-[10px] space-y-1.5">
+                        <div class="font-extrabold text-xs mb-1">สัญลักษณ์การนำทาง</div>
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-green-500"></span> จุดมุ่งหมาย</div>
+                        <div class="flex items-center gap-2"><span class="w-3 h-1.5 rounded-full bg-blue-500"></span> เส้นทางกำลังไป</div>
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange-500"></span> Checkpoint</div>
+                        <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-yellow-400"></span> ผ่านแล้ว</div>
+                        <div class="flex items-center gap-2"><span class="text-blue-400 text-sm">▲</span> ตำแหน่งของเรา</div>
+                    </div>
+
+                    <!-- 3D Navigation Controls & HUD Overlay -->
+                    <div class="absolute top-4 left-4 z-10 bg-slate-900/80 backdrop-blur-md p-3 rounded-2xl border border-white/10 text-white space-y-1 shadow-lg max-w-[240px]">
+                        <div class="flex items-center gap-2 text-xs font-bold text-cyan-400">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>3D Realism Navigation</span>
+                        </div>
+                        <p class="text-[11px] text-slate-300 leading-tight">แสดงตึก 3D เงาสมจริง พร้อมเส้นทางเรืองแสงนำสายตา</p>
+                    </div>
+
+                    <!-- Reset View & Pitch Controls -->
+                    <div class="absolute bottom-6 left-4 z-10 flex gap-2">
+                        <button onclick="resetMapView()" class="bg-slate-900/80 backdrop-blur text-white hover:bg-slate-800 text-xs font-bold px-3 py-2 rounded-xl border border-white/10 shadow transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-compass theme-text-sec"></i> รีเซ็ตมุมมอง
+                        </button>
+                        <button onclick="togglePitch3D()" class="bg-slate-900/80 backdrop-blur text-white hover:bg-slate-800 text-xs font-bold px-3 py-2 rounded-xl border border-white/10 shadow transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-cube text-amber-400"></i> สลับ 2D / 3D
+                        </button>
+                    </div>
+
+                    <!-- Surprise Button -->
+                    <button onclick="triggerModal('surprise-modal')" class="absolute top-4 right-4 z-10 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-extrabold px-4 py-2.5 rounded-full shadow-2xl text-xs flex items-center gap-2 border border-white/20 hover:scale-105 transition">
+                        <span>🎲 Surprise Me (สุ่ม Hidden Gem)</span>
+                    </button>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- 4. COUPONS PAGE -->
+        <section id="page-coupons" class="hidden space-y-6">
+            
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4">
+                <div>
+                    <h2 class="text-2xl font-black text-navy">คูปอง & สิทธิประโยชน์ EEC 🎟️</h2>
+                    <p class="text-xs text-slate-500">ส่วนลดพิเศษสนับสนุนร้านค้าชุมชนท้องถิ่น</p>
+                </div>
+                <div class="bg-amber-100 border border-amber-300 text-amber-900 px-4 py-2 rounded-2xl text-xs font-mono font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-clock text-orange-600"></i>
+                    <span>หมดเขตใน: <span id="coupon-timer">05:42:18</span></span>
+                </div>
+            </div>
+
+            <!-- Coupons Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                
+                <div class="coupon-item ticket-card p-5 shadow-sm border border-slate-200 flex justify-between items-center ux-card">
+                    <div class="space-y-1 pr-4 border-r border-dashed border-slate-200 flex-1">
+                        <span class="bg-red-100 text-red-600 font-extrabold text-[10px] px-2.5 py-0.5 rounded-md">15% OFF</span>
+                        <h4 class="font-bold text-sm text-navy">Local Coffee Shop</h4>
+                        <p class="text-xs text-slate-500">ส่วนลดเครื่องดื่ม ขั้นต่ำ ฿300</p>
+                        <p class="text-[10px] theme-text-sec font-semibold mt-1">📍 สาขาบางแสน & ระยอง</p>
+                    </div>
+                    <button onclick="collectCoupon(this, 'ส่วนลด 15% Local Coffee Shop')" class="theme-btn-primary font-extrabold px-4 py-2.5 rounded-xl text-xs shadow transition ml-3 whitespace-nowrap">
+                        🎟️ รับคูปอง
+                    </button>
+                </div>
+
+                <div class="coupon-item ticket-card p-5 shadow-sm border border-slate-200 flex justify-between items-center ux-card">
+                    <div class="space-y-1 pr-4 border-r border-dashed border-slate-200 flex-1">
+                        <span class="bg-amber-100 text-amber-800 font-extrabold text-[10px] px-2.5 py-0.5 rounded-md">ลด ฿100</span>
+                        <h4 class="font-bold text-sm text-navy">ครัวซีฟู้ดชายหาดชุมชน</h4>
+                        <p class="text-xs text-slate-500">เมื่อทานครบ ฿800</p>
+                        <p class="text-[10px] theme-text-sec font-semibold mt-1">📍 หาดพลา จ.ระยอง</p>
+                    </div>
+                    <button onclick="collectCoupon(this, 'คูปอง ฿100 ครัวซีฟู้ดชายหาด')" class="theme-btn-primary font-extrabold px-4 py-2.5 rounded-xl text-xs shadow transition ml-3 whitespace-nowrap">
+                        🎟️ รับคูปอง
+                    </button>
+                </div>
+
+                <div class="coupon-item ticket-card p-5 shadow-sm border border-slate-200 flex justify-between items-center ux-card">
+                    <div class="space-y-1 pr-4 border-r border-dashed border-slate-200 flex-1">
+                        <span class="bg-purple-100 text-purple-700 font-extrabold text-[10px] px-2.5 py-0.5 rounded-md">ฟรี ขนมหวาน</span>
+                        <h4 class="font-bold text-sm text-navy">ร้านของฝากแปดริ้ว</h4>
+                        <p class="text-xs text-slate-500">เมื่อซื้อสินค้าครบ ฿400</p>
+                        <p class="text-[10px] theme-text-sec font-semibold mt-1">📍 เมืองฉะเชิงเทรา</p>
+                    </div>
+                    <button onclick="collectCoupon(this, 'ฟรีขนมหวาน ร้านของฝากแปดริ้ว')" class="theme-btn-primary font-extrabold px-4 py-2.5 rounded-xl text-xs shadow transition ml-3 whitespace-nowrap">
+                        🎟️ รับคูปอง
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 5. USER PROFILE PAGE -->
+        <section id="page-more" class="hidden space-y-6">
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- Profile Card -->
+                <div class="glass-card p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-center ux-card">
+                    <div class="w-20 h-20 rounded-full theme-bg-gradient text-white font-black flex items-center justify-center text-3xl mx-auto shadow-lg">
+                        👋
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-lg text-navy">นักเดินทาง EEC</h3>
+                        <p class="text-xs text-slate-500">พร้อมออกไปค้นพบสถานที่ใหม่หรือยัง?</p>
+                    </div>
+                    <span class="theme-bg-light theme-text-sec font-extrabold text-xs px-3.5 py-1 rounded-full inline-block border theme-border-sec">Explorer VIP Member</span>
+                </div>
+
+                <!-- Stats Dashboard -->
+                <div class="md:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                    <div class="ux-card p-5 rounded-3xl border border-slate-200 flex flex-col justify-center">
+                        <p class="font-extrabold text-navy text-2xl">12</p>
+                        <p class="text-xs text-slate-400 mt-1">❤️ สถานที่บันทึกไว้</p>
+                    </div>
+                    <div class="ux-card p-5 rounded-3xl border border-slate-200 flex flex-col justify-center">
+                        <p id="stat-coupons-count" class="font-extrabold text-orange-600 text-2xl">0</p>
+                        <p class="text-xs text-slate-400 mt-1">🎟️ คูปองในกระเป๋า</p>
+                    </div>
+                    <div class="ux-card p-5 rounded-3xl border border-slate-200 flex flex-col justify-center">
+                        <p class="font-extrabold theme-text-pri text-2xl">5</p>
+                        <p class="text-xs text-slate-400 mt-1">🗺️ ทริปที่เดินทางแล้ว</p>
+                    </div>
+                    <div class="ux-card p-5 rounded-3xl border border-slate-200 flex flex-col justify-center">
+                        <p class="font-extrabold text-amber-500 text-2xl">350</p>
+                        <p class="text-xs text-slate-400 mt-1">⭐ สะสมพอยต์</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Coupons Wallet -->
+            <div class="ux-card p-6 rounded-3xl border border-slate-200 space-y-3 shadow-sm">
+                <h4 class="font-bold text-sm text-navy flex items-center gap-2">
+                    <i class="fa-solid fa-ticket text-orange-500"></i> กระเป๋าคูปองของฉัน
+                </h4>
+                <div id="my-coupons-container" class="space-y-2 text-xs">
+                    <p class="text-slate-400 italic">ยังไม่มีคูปองที่เก็บไว้ (สามารถไปกดรับได้ที่หน้าคูปองส่วนลด)</p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-navy border-t border-slate-800 text-slate-400 text-xs py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p>© 2026 EEC Journey - Interactive AI Travel Companion. All rights reserved.</p>
+            <div class="flex space-x-6">
+                <a href="#" class="hover:theme-text-sec transition">นโยบายความเป็นส่วนตัว</a>
+                <a href="#" class="hover:theme-text-sec transition">เงื่อนไขการใช้งาน</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODALS SYSTEM -->
+
+    <!-- Search Result Modal -->
+    <div id="search-modal" class="hidden fixed inset-0 bg-navy/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-2xl w-full space-y-4 shadow-2xl max-h-[85vh] flex flex-col border border-slate-700">
+            <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
+                <h3 class="font-extrabold text-navy text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass theme-text-pri"></i>
+                    <span>ผลการค้นหาสำหรับ "<span id="search-query-display" class="theme-text-pri"></span>"</span>
+                </h3>
+                <button onclick="closeModal('search-modal')" class="text-slate-400 hover:text-navy text-lg font-bold">✕</button>
+            </div>
+
+            <div id="search-results-container" class="space-y-3 overflow-y-auto pr-1 flex-1 text-xs">
+                <!-- Search results injected dynamically via JavaScript -->
+            </div>
+
+            <div class="pt-2 border-t border-slate-200 dark:border-slate-800 text-right">
+                <button onclick="closeModal('search-modal')" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold px-4 py-2 rounded-xl text-xs transition">
+                    ปิดหน้าต่าง
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Modal -->
+    <div id="welcome-modal" class="hidden fixed inset-0 bg-navy/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full text-center space-y-4 shadow-2xl border border-slate-700">
+            <div class="w-16 h-16 theme-bg-light theme-text-sec rounded-full flex items-center justify-center mx-auto text-3xl">🎨</div>
+            <h3 class="font-extrabold text-navy text-xl">ยินดีต้อนรับสู่ EEC Journey Portal</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                สัมผัสประสบการณ์ใหม่! รองรับ **แผนที่ 3D นำทางสมจริง**, **การสลับโหมดมืด/สว่าง** และ **ระบบแนะนำตามเทศกาลประเพณี** ของ EEC ครบทั้งชลบุรี ระยอง ฉะเชิงเทรา
+            </p>
+            <button onclick="closeModal('welcome-modal')" class="w-full bg-navy text-white font-bold py-3 rounded-xl text-xs shadow hover:bg-slate-800 transition">
+                รับทราบ และ เริ่มต้นใช้งาน
+            </button>
+        </div>
+    </div>
+
+    <!-- AI Loading Screen -->
+    <div id="ai-loading-modal" class="hidden fixed inset-0 bg-navy z-50 flex flex-col items-center justify-center p-6 text-white text-center space-y-6">
+        <div class="relative w-24 h-24 flex items-center justify-center">
+            <div class="absolute inset-0 border-4 border-slate-700 rounded-full"></div>
+            <div class="absolute inset-0 border-4 theme-border-sec border-t-transparent rounded-full animate-spin"></div>
+            <i class="fa-solid fa-robot text-3xl theme-text-sec"></i>
+        </div>
+        <div class="space-y-2">
+            <h3 class="text-xl font-extrabold">🤖 AI กำลังคำนวณเส้นทางและตารางเวลา...</h3>
+            <p id="ai-status-text" class="text-xs theme-text-sec font-mono">Analyzing preferences & time slots...</p>
+        </div>
+        <div class="w-full max-w-sm bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
+            <div id="ai-progress-bar" class="theme-bg-gradient h-full w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <!-- Surprise Modal -->
+    <div id="surprise-modal" class="hidden fixed inset-0 bg-navy/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl border border-slate-700">
+            <div class="text-4xl">🎲</div>
+            <h3 class="font-extrabold text-navy text-lg">✨ ค้นพบ Hidden Gem ใหม่!</h3>
+            <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border text-left space-y-1">
+                <p class="font-bold text-xs text-navy">📍 ตลาดน้ำโบราณบางขวัญ (ฉะเชิงเทรา)</p>
+                <p class="text-xs text-slate-500">สัมผัสวิถีชีวิตริมน้ำ ชิมขนมไทยโบราณสูตรดั้งเดิม</p>
+            </div>
+            <button onclick="closeModal('surprise-modal'); switchTab('map');" class="w-full theme-btn-primary font-bold py-3 rounded-xl text-xs shadow">
+                เพิ่มเข้าไปในแผนที่
+            </button>
+        </div>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        let collectedCoupons = [];
+        let selectedDurationText = "☀️ 1 Day Trip (08:00 - 18:00)";
+        let isDarkMode = false;
+        let mapInstance = null;
+
+        // FESTIVALS DATABASE
+        const festivalData = {
+            fruit: {
+                title: '🍓 เทศกาลผลไม้ & ทุเรียนระยอง',
+                province: '📍 จ.ระยอง',
+                season: 'ช่วงเดือน พฤษภาคม - กรกฎาคม',
+                img: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?auto=format&fit=crop&w=800&q=80',
+                desc: 'ช่วงเวลาทองของคนรักทุเรียนและผลไม้สด! ตะลุยชิมทุเรียนหมอนทอง ชะนี มังคุด สดๆ จากสวนบุฟเฟต์ผลไม้ชุมชนบ้านค่าย และอุดหนุนเกษตรกรท้องถิ่น',
+                highlights: ['บุฟเฟต์ผลไม้สดจากสวน', 'ตลาดนัดผลไม้คุณภาพราคาชุมชน', 'นั่งรถพ่วงซาเล้งชมสวนเกษตร'],
+                searchKey: 'ผลไม้'
+            },
+            songkran: {
+                title: '🌊 ประเพณีวันไหล & สงกรานต์ชลบุรี',
+                province: '📍 จ.ชลบุรี (บางแสน - พัทยา)',
+                season: 'ช่วงเดือน เมษายน (16 - 19 เม.ย.)',
+                img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+                desc: 'ประเพณีวันไหลบางแสน ประตูก่อพระเจดีย์ทรายริมชายหาดชลบุรี เล่นน้ำดับร้อนริมทะเล พร้อมฟรีคอนเสิร์ตจากศิลปินชั้นนำริมหาด',
+                highlights: ['ประกวดพระเจดีย์ทรายริมหาดบางแสน', 'การสรงน้ำพระพุทธรูปสืบสานประเพณี', 'เล่นน้ำสงกรานต์ริมหาดสุดคึกคัก'],
+                searchKey: 'สงกรานต์'
+            },
+            buffalo: {
+                title: '🐃 ประเพณีวิ่งควายจังหวัดชลบุรี',
+                province: '📍 จ.ชลบุรี (เมืองชลบุรี)',
+                season: 'ช่วงเดือน ตุลาคม (ขึ้น 14 ค่ำ เดือน 11)',
+                img: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80',
+                desc: 'หนึ่งเดียวในโลก! ประเพณีเอกลักษณ์อันตระการตาของชาวชลบุรีที่สืบทอดมากกว่า 100 ปี การแข่งขันความเร็วของควายไทย และประกวดน้องควายสวยงาม',
+                highlights: ['การแข่งขันวิ่งควายเร็วรุ่นต่างๆ', 'ประกวดควายงามและน้องควายแฟนซี', 'ตลาดนัดสินค้าOTOP ของดีเมืองชล'],
+                searchKey: 'วิ่งควาย'
+            },
+            sothon: {
+                title: '🪔 งานนมัสการหลวงพ่อโสธร & งานกาชาดแปดริ้ว',
+                province: '📍 จ.ฉะเชิงเทรา',
+                season: 'ช่วงเดือน พฤศจิกายน (กลางเดือน 12)',
+                img: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80',
+                desc: 'งานใหญ่ประจำปีของเมืองแปดริ้ว ร่วมพิธีบวงสรวงกราบไหว้หลวงพ่อโสธร ขบวนแห่ทางบกและทางน้ำอันศักดิ์สิทธิ์ พร้อมมหรสพและการออกร้านกาชาด',
+                highlights: ['ขบวนแห่หลวงพ่อโสธรทางน้ำริมแม่น้ำบางปะกง', 'สักการะขอพรหลวงพ่อโสธรองค์จริง', 'ตลาดนัดขนมไทยโบราณแปดริ้ว'],
+                searchKey: 'หลวงพ่อโสธร'
+            }
+        };
+
+        // SEARCH DATABASE
+        const searchDatabase = [
+            { id: 1, title: 'หาดบางแสน & คาเฟ่ลับ', category: 'สถานที่ท่องเที่ยว', location: 'ชลบุรี', icon: 'fa-umbrella-beach', tab: 'map', desc: 'จุดเช็กอินยอดนิยม ชายหาดบางแสน ร้านอาหารทะเล และคาเฟ่ริมหาด' },
+            { id: 2, title: 'สวนผลไม้ชุมชนบ้านค่าย (ทุเรียนระยอง)', category: 'ท่องเที่ยวชุมชน / เทศกาล', location: 'ระยอง', icon: 'fa-apple-whole', tab: 'map', desc: 'ชิมทุเรียน บุฟเฟต์ผลไม้ระยอง สัมผัสวิถีเกษตรกร' },
+            { id: 3, title: 'ตลาดโบราณคลองสวน 100 ปี', category: 'ตลาดโบราณ', location: 'ฉะเชิงเทรา', icon: 'fa-store', tab: 'map', desc: 'เดินชมบรรยากาศย้อนยุค ชิมกาแฟโบราณ แปดริ้ว' },
+            { id: 4, title: 'XYZ Café ระยอง', category: 'คาเฟ่', location: 'ระยอง', icon: 'fa-mug-hot', tab: 'map', desc: 'คาเฟ่บรรยากาศชิลล์ กาแฟดิปคุณภาพ คนไม่หนาแน่น' },
+            { id: 5, title: 'ประเพณีวันไหลบางแสน (สงกรานต์)', category: 'เทศกาลประเพณี', location: 'ชลบุรี', icon: 'fa-water', tab: 'home', desc: 'งานก่อพระเจดีย์ทราย และเล่นน้ำสงกรานต์ริมหาดบางแสน' },
+            { id: 6, title: 'ประเพณีวิ่งควายชลบุรี', category: 'เทศกาลประเพณี', location: 'ชลบุรี', icon: 'fa-trophy', tab: 'home', desc: 'งานแข่งวิ่งควายหนึ่งเดียวในโลก เอกลักษณ์ประจำจังหวัดชลบุรี' },
+            { id: 7, title: 'งานนมัสการหลวงพ่อโสธร แปดริ้ว', category: 'เทศกาลประเพณี', location: 'ฉะเชิงเทรา', icon: 'fa-place-of-worship', tab: 'home', desc: 'งานสักการะขอพรหลวงพ่อโสธร ขบวนแห่ทางน้ำประจำปี' },
+            { id: 8, title: 'Local Coffee Shop (ส่วนลด 15%)', category: 'คูปองส่วนลด', location: 'ชลบุรี / ระยอง', icon: 'fa-ticket', tab: 'coupons', desc: 'คูปองส่วนลด 15% เมื่อซื้อเครื่องดื่มขั้นต่ำ ฿300' }
+        ];
+
+        // 🗺️ INITIALIZE REALISTIC 3D MAP
+        function init3DMap() {
+            if (mapInstance) return;
+
+            mapInstance = new maplibregl.Map({
+                container: 'eec-3d-map',
+                style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+                center: [100.9022, 13.2828], // พิกัดหาดบางแสน ชลบุรี
+                zoom: 15.5,
+                pitch: 60,   // ปรับเอียงเพิ่มมิติ 3D
+                bearing: -20
+            });
+
+            mapInstance.on('load', () => {
+                // 1. เพิ่มโมเดลตึก 3D (3D Building Extrusion Layer)
+                const layers = mapInstance.getStyle().layers;
+                let labelLayerId;
+                for (let i = 0; i < layers.length; i++) {
+                    if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {
+                        labelLayerId = layers[i].id;
+                        break;
+                    }
+                }
+
+                mapInstance.addLayer({
+                    'id': '3d-buildings',
+                    'source': 'carto',
+                    'source-layer': 'building',
+                    'filter': ['==', 'extrude', 'true'],
+                    'type': 'fill-extrude',
+                    'minzoom': 13,
+                    'paint': {
+                        'fill-extrude-color': '#1e293b',
+                        'fill-extrude-height': ['get', 'height'],
+                        'fill-extrude-base': ['get', 'min_height'],
+                        'fill-extrude-opacity': 0.8
+                    }
+                }, labelLayerId);
+
+                // 2. ข้อมูลเส้นทางนำทาง EEC Trip
+                // Blue = route currently being travelled.
+                const eecRouteCoordinates = [
+                    [100.9022, 13.2828], // จุดที่ 1 หาดบางแสน
+                    [100.9080, 13.2890], // จุดที่ 2 XYZ Café
+                    [100.9150, 13.2950]  // จุดที่ 3 ตลาดคลองสวน
+                ];
+
+                mapInstance.addSource('eec-route', {
+                    'type': 'geojson',
+                    'data': {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'LineString',
+                            'coordinates': eecRouteCoordinates
+                        }
+                    }
+                });
+
+                // 3. เส้นทางกำลังไป = สีฟ้า
+                mapInstance.addLayer({
+                    'id': 'route-glow',
+                    'type': 'line',
+                    'source': 'eec-route',
+                    'layout': { 'line-join': 'round', 'line-cap': 'round' },
+                    'paint': {
+                        'line-color': '#3b82f6',
+                        'line-width': 16,
+                        'line-opacity': 0.22,
+                        'line-blur': 6
+                    }
+                });
+
+                mapInstance.addLayer({
+                    'id': 'route-core',
+                    'type': 'line',
+                    'source': 'eec-route',
+                    'layout': { 'line-join': 'round', 'line-cap': 'round' },
+                    'paint': {
+                        'line-color': '#3b82f6',
+                        'line-width': 6
+                    }
+                });
+
+                // 4. จุด Checkpoint = สีส้ม / ผ่านแล้ว = สีเหลือง
+                const checkpointData = [
+                    { id: 1, lng: 100.9022, lat: 13.2828, icon: '🌊', time: '09:00 น.', name: 'หาดบางแสน' },
+                    { id: 2, lng: 100.9080, lat: 13.2890, icon: '☕', time: '11:30 น.', name: 'XYZ Café' },
+                    { id: 3, lng: 100.9150, lat: 13.2950, icon: '⛩️', time: '15:00 น.', name: 'ตลาดคลองสวน' }
+                ];
+
+                window.currentCheckpointIndex = 0;
+
+                checkpointData.forEach((point, index) => {
+                    addCheckpointMarker(point, index);
+                });
+
+                // 5. จุดมุ่งหมายสุดท้าย = สีเขียว
+                addDestinationMarker(
+                    [100.9150, 13.2950],
+                    'จุดมุ่งหมาย • ตลาดคลองสวน'
+                );
+
+                // 6. ตัวเรา / ตำแหน่งปัจจุบัน = ลูกศรสีน้ำเงิน
+                addCurrentLocationMarker([100.9022, 13.2828], 0);
+
+                // อัปเดตสถานะ checkpoint ตามตำแหน่งปัจจุบัน
+                updateCheckpointStates(0);
+            });
+        }
+
+        function addCheckpointMarker(point, index) {
+            const el = document.createElement('div');
+            el.className = 'map-marker-pin checkpoint';
+            el.dataset.checkpointIndex = index;
+            el.innerHTML = `
+                <span class="map-marker-dot"></span>
+                <span>${point.icon} จุด ${point.id} • ${point.name}</span>
+            `;
+            el.title = `${point.time} | ${point.name}`;
+            new maplibregl.Marker(el)
+                .setLngLat([point.lng, point.lat])
+                .addTo(mapInstance);
+        }
+
+        function addDestinationMarker(lngLat, text) {
+            const el = document.createElement('div');
+            el.className = 'map-marker-pin destination';
+            el.innerHTML = `
+                <span class="map-marker-dot"></span>
+                <span>🎯 ${text}</span>
+            `;
+            new maplibregl.Marker(el)
+                .setLngLat(lngLat)
+                .addTo(mapInstance);
+        }
+
+        function addCurrentLocationMarker(lngLat, bearing = 0) {
+            const el = document.createElement('div');
+            el.className = 'current-location-marker';
+            el.innerHTML = `
+                <span class="pulse"></span>
+                <span class="arrow"></span>
+            `;
+            el.style.transform = `rotate(${bearing}deg)`;
+            window.currentLocationMarker = new maplibregl.Marker({
+                element: el,
+                anchor: 'center'
+            })
+                .setLngLat(lngLat)
+                .addTo(mapInstance);
+        }
+
+        function updateCurrentLocation(lngLat, bearing = 0) {
+            if (!window.currentLocationMarker) return;
+            window.currentLocationMarker.setLngLat(lngLat);
+            const el = window.currentLocationMarker.getElement();
+            el.style.transform = `rotate(${bearing}deg)`;
+        }
+
+        function updateCheckpointStates(currentIndex) {
+            window.currentCheckpointIndex = currentIndex;
+            document.querySelectorAll('.checkpoint[data-checkpoint-index]').forEach(el => {
+                const index = Number(el.dataset.checkpointIndex);
+                el.classList.toggle('passed', index < currentIndex);
+            });
+        }
+
+        // ใช้เมื่อระบบ GPS ตรวจพบว่าเดินทางผ่าน checkpoint แล้ว
+        function markCheckpointPassed(checkpointIndex) {
+            updateCheckpointStates(checkpointIndex + 1);
+        }
+
+        function focusMapPoint(lng, lat) {
+            if (!mapInstance) return;
+            mapInstance.flyTo({
+                center: [lng, lat],
+                zoom: 16.5,
+                pitch: 60,
+                speed: 1.2
+            });
+        }
+
+        function resetMapView() {
+            if (!mapInstance) return;
+            mapInstance.flyTo({
+                center: [100.9022, 13.2828],
+                zoom: 15.5,
+                pitch: 60,
+                bearing: -20,
+                speed: 1.2
+            });
+        }
+
+        function togglePitch3D() {
+            if (!mapInstance) return;
+            const currentPitch = mapInstance.getPitch();
+            mapInstance.easeTo({
+                pitch: currentPitch > 20 ? 0 : 60,
+                duration: 800
+            });
+        }
+
+        // DARK / LIGHT MODE TOGGLE SYSTEM
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            applyDarkModeState();
+        }
+
+        function applyDarkModeState() {
+            const body = document.body;
+            const darkIcon = document.getElementById('dark-mode-icon');
+            const darkText = document.getElementById('dark-mode-text');
+
+            if (isDarkMode) {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                document.documentElement.classList.add('dark');
+                darkIcon.className = 'fa-solid fa-moon text-cyan-300';
+                darkText.innerText = 'โหมดมืด';
+                localStorage.setItem('eec-darkmode', 'enabled');
+            } else {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                document.documentElement.classList.remove('dark');
+                darkIcon.className = 'fa-solid fa-sun text-amber-400';
+                darkText.innerText = 'โหมดสว่าง';
+                localStorage.setItem('eec-darkmode', 'disabled');
+            }
+        }
+
+        // FESTIVAL FILTER SYSTEM
+        function filterFestival(key) {
+            const fest = festivalData[key];
+            if (!fest) return;
+
+            // Update Tab Active UI
+            document.querySelectorAll('.fest-tab-btn').forEach(btn => {
+                btn.className = 'fest-tab-btn bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium px-3.5 py-1.5 rounded-xl hover:bg-slate-300 transition';
+            });
+            const activeBtn = document.getElementById(`fest-btn-${key}`);
+            if (activeBtn) {
+                activeBtn.className = 'fest-tab-btn bg-amber-500 text-white font-bold px-3.5 py-1.5 rounded-xl shadow transition';
+            }
+
+            // Render Festival Card Display
+            const container = document.getElementById('festival-display-card');
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                    <div class="lg:col-span-5 relative h-56 lg:h-full rounded-2xl overflow-hidden shadow-md">
+                        <img src="${fest.img}" alt="${fest.title}" class="w-full h-full object-cover">
+                        <span class="absolute top-3 left-3 bg-black/70 backdrop-blur text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20">
+                            ${fest.province}
+                        </span>
+                    </div>
+                    <div class="lg:col-span-7 space-y-3">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold text-xs px-3 py-0.5 rounded-full border border-amber-500/20">
+                                📅 ${fest.season}
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-extrabold text-navy">${fest.title}</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed">${fest.desc}</p>
+                        
+                        <div class="space-y-1.5 pt-1">
+                            <p class="text-[11px] font-bold theme-text-pri uppercase tracking-wider">🌟 กิจกรรมไฮไลต์ห้ามพลาด:</p>
+                            <div class="flex flex-wrap gap-2 text-[11px]">
+                                ${fest.highlights.map(h => `<span class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">✓ ${h}</span>`).join('')}
+                            </div>
+                        </div>
+
+                        <div class="pt-3 flex flex-wrap items-center gap-3">
+                            <button onclick="planTripForFestival('${fest.searchKey}')" class="theme-btn-primary font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-md flex items-center gap-2">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> 🤖 AI วางแผนไปงานนี้
+                            </button>
+                            <button onclick="performSearch('${fest.searchKey}')" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 text-slate-800 dark:text-slate-200 font-bold px-4 py-2.5 rounded-xl text-xs transition">
+                                🔍 ค้นหาข้อมูลเพิ่มเติม
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function planTripForFestival(keyword) {
+            switchTab('ai');
+            alert(`นำข้อมูลเทศกาล "${keyword}" เข้าสู่ระบบ AI เรียบร้อยแล้ว! กรุณากดปุ่มประมวลผลจัดทริปได้เลยครับ`);
+        }
+
+        // SEARCH FUNCTIONS
+        function executeSearch(source) {
+            let query = '';
+            if (source === 'hero') {
+                query = document.getElementById('hero-search-input').value.trim();
+            } else {
+                query = document.getElementById('nav-search-input').value.trim();
+            }
+
+            if (!query) {
+                alert('กรุณาพิมพ์คำที่ต้องการค้นหาก่อนครับ');
+                return;
+            }
+
+            performSearch(query);
+        }
+
+        function handleQuickSearch(event) {
+            if (event.key === 'Enter') {
+                executeSearch('nav');
+            }
+        }
+
+        function triggerSearchModalFromNav() {
+            executeSearch('nav');
+        }
+
+        function quickSearchTag(keyword) {
+            document.getElementById('hero-search-input').value = keyword;
+            performSearch(keyword);
+        }
+
+        function performSearch(query) {
+            const container = document.getElementById('search-results-container');
+            document.getElementById('search-query-display').innerText = query;
+
+            const results = searchDatabase.filter(item => 
+                item.title.toLowerCase().includes(query.toLowerCase()) ||
+                item.category.toLowerCase().includes(query.toLowerCase()) ||
+                item.location.toLowerCase().includes(query.toLowerCase()) ||
+                item.desc.toLowerCase().includes(query.toLowerCase())
+            );
+
+            if (results.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 space-y-2">
+                        <p class="text-3xl">🔍</p>
+                        <p class="font-bold text-slate-600">ไม่พบข้อมูลที่ตรงกับ "${query}"</p>
+                        <p class="text-slate-400 text-[11px]">ลองค้นหาด้วยคำอื่น เช่น ผลไม้, สงกรานต์, วิ่งควาย, หรือ หลวงพ่อโสธร</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = results.map(item => `
+                    <div class="p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 hover:bg-slate-100 dark:hover:bg-slate-750 transition">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-lg theme-bg-light theme-text-sec flex items-center justify-center text-xs">
+                                    <i class="fa-solid ${item.icon}"></i>
+                                </span>
+                                <span class="font-extrabold text-navy text-sm">${item.title}</span>
+                                <span class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] px-2 py-0.5 rounded-full font-bold">${item.category}</span>
+                            </div>
+                            <p class="text-slate-500 text-xs">${item.desc}</p>
+                            <span class="text-[10px] theme-text-sec font-bold block">📍 ${item.location}</span>
+                        </div>
+                        <button onclick="navigateSearchResult('${item.tab}')" class="theme-btn-primary font-bold px-4 py-2 rounded-xl text-xs whitespace-nowrap self-end sm:self-center">
+                            ดูข้อมูลเพิ่มเติม →
+                        </button>
+                    </div>
+                `).join('');
+            }
+
+            triggerModal('search-modal');
+        }
+
+        function navigateSearchResult(tab) {
+            closeModal('search-modal');
+            switchTab(tab);
+        }
+
+        // DYNAMIC THEME SWITCHER FUNCTION
+        function setTheme(themeName) {
+            document.documentElement.setAttribute('data-theme', themeName);
+            localStorage.setItem('eec-theme', themeName);
+        }
+
+        function switchTab(tab) {
+            const pages = ['home', 'ai', 'map', 'coupons', 'more'];
+            pages.forEach(p => {
+                document.getElementById(`page-${p}`).classList.add('hidden');
+                const navBtn = document.getElementById(`nav-${p}`);
+                if (navBtn) {
+                    navBtn.classList.remove('theme-text-sec', 'bg-navy', 'shadow', 'font-bold');
+                    navBtn.classList.add('text-slate-300', 'font-medium');
+                }
+            });
+
+            document.getElementById(`page-${tab}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tab}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-slate-300', 'font-medium');
+                activeNav.classList.add('theme-text-sec', 'bg-navy', 'shadow', 'font-bold');
+            }
+
+            // ถ้าเปลี่ยนมาหน้าแผนที่ ให้เรียกโหลดหรือย่อ/ขยายแผนที่ให้ตรงขนาด
+            if (tab === 'map') {
+                setTimeout(() => {
+                    if (!mapInstance) {
+                        init3DMap();
+                    } else {
+                        mapInstance.resize();
+                    }
+                }, 100);
+            }
+        }
+
+        function triggerModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function selectAge(btn) {
+            document.querySelectorAll('.age-btn').forEach(b => {
+                b.classList.remove('border', 'theme-border-sec', 'theme-bg-light', 'font-bold');
+                b.classList.add('border-slate-300', 'font-medium');
+            });
+            btn.classList.add('border', 'theme-border-sec', 'theme-bg-light', 'font-bold');
+        }
+
+        function selectDurationFromSelect(val) {
+            selectedDurationText = val;
+        }
+
+        function toggleStyle(chip) {
+            chip.classList.toggle('theme-bg-light');
+            chip.classList.toggle('theme-border-sec');
+            chip.classList.toggle('font-bold');
+        }
+
+        function selectCompanion(btn) {
+            document.querySelectorAll('.comp-btn').forEach(b => {
+                b.classList.remove('border', 'theme-border-sec', 'theme-bg-light', 'font-bold');
+                b.classList.add('border-slate-200');
+            });
+            btn.classList.add('border', 'theme-border-sec', 'theme-bg-light', 'font-bold');
+        }
+
+        function updateBudget(val) {
+            document.getElementById('budget-value').innerText = `฿${parseInt(val).toLocaleString()}`;
+        }
+
+        function startAIGeneration() {
+            const rawDate = document.getElementById('trip-date-input').value;
+            if (rawDate) {
+                const dateObj = new Date(rawDate);
+                const options = { day: 'numeric', month: 'short', year: 'numeric' };
+                document.getElementById('selected-date-display').innerText = `📅 ทริปวันที่: ${dateObj.toLocaleDateString('th-TH', options)}`;
+            }
+            document.getElementById('selected-duration-display').innerText = selectedDurationText;
+
+            triggerModal('ai-loading-modal');
+            const statusText = document.getElementById('ai-status-text');
+            const progressBar = document.getElementById('ai-progress-bar');
+            
+            const steps = [
+                { progress: '25%', text: 'Analyzing date & duration preferences...' },
+                { progress: '50%', text: 'Calculating optimal 3D map routes...' },
+                { progress: '75%', text: 'Checking seasonal events & crowd density...' },
+                { progress: '100%', text: '🎉 ตารางเวลาเดินทางพร้อมแล้ว!' }
+            ];
+
+            let stepIdx = 0;
+            const interval = setInterval(() => {
+                if (stepIdx < steps.length) {
+                    progressBar.style.width = steps[stepIdx].progress;
+                    statusText.innerText = steps[stepIdx].text;
+                    stepIdx++;
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        closeModal('ai-loading-modal');
+                        switchTab('map');
+                    }, 500);
+                }
+            }, 600);
+        }
+
+        function acceptReroute() {
+            document.getElementById('reroute-banner').classList.add('hidden');
+            updateCurrentLocation([100.9080, 13.2890], 35);
+            markCheckpointPassed(0);
+            focusMapPoint(100.9080, 13.2890);
+        }
+
+        function collectCoupon(btn, name) {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+
+            btn.innerText = "✓ เก็บแล้ว";
+            btn.classList.remove('theme-btn-primary');
+            btn.classList.add('bg-slate-400', 'text-white', 'cursor-not-allowed');
+            btn.disabled = true;
+
+            if (!collectedCoupons.includes(name)) {
+                collectedCoupons.push(name);
+                updateCouponsState();
+            }
+        }
+
+        function updateCouponsState() {
+            document.getElementById('stat-coupons-count').innerText = collectedCoupons.length;
+            const container = document.getElementById('my-coupons-container');
+            container.innerHTML = collectedCoupons.map(c => `
+                <div class="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl flex justify-between items-center text-xs">
+                    <span class="font-bold text-amber-900 dark:text-amber-200">${c}</span>
+                    <span class="bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 text-[10px] px-2.5 py-0.5 rounded font-bold">พร้อมใช้งาน</span>
+                </div>
+            `).join('');
+        }
+
+        function startTimer() {
+            let duration = 20538;
+            const timerEl = document.getElementById('coupon-timer');
+            setInterval(() => {
+                duration--;
+                let hrs = Math.floor(duration / 3600);
+                let mins = Math.floor((duration % 3600) / 60);
+                let secs = duration % 60;
+                timerEl.innerText = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // INITIALIZATION
+        window.addEventListener('DOMContentLoaded', () => {
+            // Restore dark mode setting
+            const savedDarkMode = localStorage.getItem('eec-darkmode');
+            if (savedDarkMode === 'enabled') {
+                isDarkMode = true;
+                applyDarkModeState();
+            }
+            
+            // Restore theme setting
+            const savedTheme = localStorage.getItem('eec-theme');
+            if (savedTheme) {
+                setTheme(savedTheme);
+            }
+
+            // Initialize Festival Showcase Card (Default: Fruit)
+            filterFestival('fruit');
+
+            // Start Coupon Countdown
+            startTimer();
+        });
+    </script>
+</body>
+</html>
