@@ -9,6 +9,18 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Chatbot from './components/Chatbot';
 import PDPABanner from './components/PDPABanner';
+import { AnimatePresence, motion } from 'framer-motion';
+
+const PageTransition = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.98, filter: 'blur(4px)' }}
+    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+    exit={{ opacity: 0, scale: 1.02, filter: 'blur(4px)' }}
+    transition={{ duration: 0.4, ease: "easeOut" }}
+  >
+    {children}
+  </motion.div>
+);
 
 function AppContent() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -143,15 +155,17 @@ function AppContent() {
       </div>
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/itinerary" element={<Itinerary />} />
-          <Route path="/map" element={<SmartMap />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+            <Route path="/onboarding" element={<PageTransition><Onboarding /></PageTransition>} />
+            <Route path="/itinerary" element={<PageTransition><Itinerary /></PageTransition>} />
+            <Route path="/map" element={<PageTransition><SmartMap /></PageTransition>} />
+            <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+            <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
+            <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+          </Routes>
+        </AnimatePresence>
       </main>
 
       {/* Floating AI Chatbot */}

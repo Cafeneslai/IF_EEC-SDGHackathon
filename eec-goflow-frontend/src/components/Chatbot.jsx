@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Loader2, Sparkles } from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, Sparkles, Mic, Volume2, VolumeX } from 'lucide-react';
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,7 +8,60 @@ export default function Chatbot() {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'th-TH'; // Set to Thai
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(prev => prev + transcript);
+        setIsListening(false);
+      };
+      
+      recognition.onerror = () => {
+        setIsListening(false);
+      };
+      
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+      
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const toggleListen = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+    } else {
+      recognitionRef.current?.start();
+      setIsListening(true);
+    }
+  };
+
+  const speakText = (text) => {
+    if (isMuted || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel(); // Stop any ongoing speech
+    
+    // Remove markdown symbols for cleaner speech
+    const cleanText = text.replace(/[*#_]/g, '');
+    
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = 'th-TH';
+    utterance.rate = 1.1; // Slightly faster
+    
+    window.speechSynthesis.speak(utterance);
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -35,7 +88,12 @@ export default function Chatbot() {
       });
       const data = await response.json();
       
-      setMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
+      const aiReply = data.reply;
+      setMessages(prev => [...prev, { role: 'ai', text: aiReply }]);
+      
+      // AI Speaks the reply
+      speakText(aiReply);
+      
     } catch (err) {
       setMessages(prev => [...prev, { role: 'ai', text: 'ขออภัยครับ ระบบแชทขัดข้องชั่วคราว ลองใหม่อีกครั้งนะครับ' }]);
     } finally {
@@ -74,9 +132,20 @@ export default function Chatbot() {
                 </p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white transition">
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => {
+                  setIsMuted(!isMuted);
+                  if (!isMuted) window.speechSynthesis?.cancel();
+                }} 
+                className="text-white/70 hover:text-white transition"
+                title={isMuted ? "เปิดเสียง AI" : "ปิดเสียง AI"}
+              >
+                {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              </button>
+              <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white transition">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Messages Area */}
@@ -125,6 +194,14 @@ export default function Chatbot() {
               placeholder="พิมพ์ถาม AI ได้เลย..."
               className="flex-1 bg-slate-100 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
             />
+            <button
+              type="button"
+              onClick={toggleListen}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+              title="พิมพ์ด้วยเสียง"
+            >
+              <Mic className="w-4 h-4" />
+            </button>
             <button 
               type="submit" 
               disabled={!input.trim() || loading}

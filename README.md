@@ -36,6 +36,9 @@
 - 🧩 **Drag & Drop Itinerary:** ผู้ใช้สามารถลาก-วาง สลับลำดับสถานที่ในแผนการเดินทางได้อย่างอิสระผ่านระบบ HTML5 Drag and Drop
 - 😷 **Live AQI & Weather Alert:** ดึงข้อมูลฝุ่น PM2.5 แบบ Real-time พร้อมแสดงป้ายเตือนหากอากาศเป็นพิษ เพื่อแนะนำให้สลับไปสถานที่ในร่ม
 - 🎭 **AI Travel Persona Quiz:** แบบทดสอบจิตวิทยาสั้นๆ ก่อนสร้างแพลน เพื่อวิเคราะห์สไตล์การเดินทางและกรอกแบบฟอร์มให้อัตโนมัติ
+- 📱 **Progressive Web App (PWA):** รองรับการติดตั้งแอปพลิเคชันลงบนสมาร์ทโฟนและเดสก์ท็อปโดยตรง
+- 🎙️ **Voice AI Interaction:** แชทบอทรองรับการสั่งการด้วยเสียง (Speech-to-Text) และสามารถอ่านออกเสียงตอบกลับได้ (Text-to-Speech)
+- 🎬 **Premium Smooth Animations:** ระบบแอนิเมชันสลับหน้าสุดหรูหราด้วย Framer Motion ให้ความรู้สึกเหมือนกำลังใช้ Native App
 
 ---
 
@@ -67,7 +70,7 @@
 **Terminal 1: รัน AI Service (Python)**
 ```bash
 cd eec-goflow-ai
-pip install fastapi uvicorn pydantic ollama
+pip install "fastapi[standard]" pydantic ollama
 fastapi dev main.py
 # เซิร์ฟเวอร์จะรันที่ http://127.0.0.1:8000
 ```
