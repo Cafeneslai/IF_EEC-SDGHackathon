@@ -12,6 +12,8 @@ export default function Itinerary() {
   const [errorPlan, setErrorPlan] = useState(null);
   const [weatherData, setWeatherData] = useState({ temp: '28°C', desc: 'กำลังโหลด...', icon: 'CloudSun' });
   const [isExporting, setIsExporting] = useState(false);
+  const [aqiData, setAqiData] = useState(null);
+  const [draggedIdx, setDraggedIdx] = useState(null);
   
   useEffect(() => {
     if (location.state && location.state.plan) {
@@ -62,6 +64,16 @@ export default function Itinerary() {
         }
       })
       .catch(e => console.error(e));
+
+    // Fetch AQI and PM2.5
+    fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${target.lat}&longitude=${target.lng}&current=european_aqi,pm2_5`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.current) {
+          setAqiData({ pm2_5: data.current.pm2_5, aqi: data.current.european_aqi });
+        }
+      })
+      .catch(console.error);
   }, [currentProvince]);
 
   const handleShare = async () => {
@@ -118,6 +130,38 @@ export default function Itinerary() {
     } catch (error) {
       console.error("Failed to regenerate place from AI", error);
     }
+  };
+
+  const handleDragStart = (e, index) => {
+    setDraggedIdx(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e, targetIdx) => {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === targetIdx) return;
+    
+    setPlanData(prev => {
+      const newPlan = [...prev.plan];
+      const dayIndex = newPlan.findIndex(d => d.day === activeDay);
+      if (dayIndex !== -1) {
+        const items = [...newPlan[dayIndex].itinerary];
+        const draggedItem = items[draggedIdx];
+        
+        // Reorder array
+        items.splice(draggedIdx, 1);
+        items.splice(targetIdx, 0, draggedItem);
+        
+        newPlan[dayIndex].itinerary = items;
+      }
+      return { ...prev, plan: newPlan };
+    });
+    setDraggedIdx(null);
   };
 
   if (!planData || planData.plan.length === 0) {
@@ -184,13 +228,30 @@ export default function Itinerary() {
             </div>
           )}
 
+          {/* AQI Alert Banner */}
+          {aqiData && (
+            <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-3 text-amber-800 animate-in fade-in slide-in-from-top-2">
+              <div className="bg-amber-100 p-2 rounded-xl text-amber-600 shrink-0">
+                <i className="fa-solid fa-mask-ventilator text-xl"></i>
+              </div>
+              <div>
+                <h4 className="font-bold text-amber-900 mb-1">แจ้งเตือนคุณภาพอากาศ (AQI Alert)</h4>
+                <p className="text-sm">ค่าฝุ่น PM2.5 ปัจจุบันอยู่ที่ <strong>{aqiData.pm2_5} µg/m³</strong> {aqiData.pm2_5 > 35 ? '(เกินมาตรฐาน) AI แนะนำให้ใส่หน้ากากอนามัย หรือสลับไปเที่ยวสถานที่ในร่ม (Indoor) แทนครับ' : 'อากาศดี เหมาะแก่การทำกิจกรรมกลางแจ้ง!'}</p>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-8 relative pb-10 mt-4">
             <div className="timeline-glow-line"></div>
             {activeTimelineItems.map((item, idx) => (
               <ItineraryCard 
                 key={idx + item.location} 
                 data={item} 
-                onRegenerate={() => handleRegenerate(idx, item)} 
+                onRegenerate={() => handleRegenerate(idx, item)}
+                index={idx}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
               />
             ))}
           </div>
@@ -282,7 +343,7 @@ export default function Itinerary() {
   );
 }
 
-function ItineraryCard({ data, onRegenerate }) {
+function ItineraryCard({ data, onRegenerate, index, onDragStart, onDragOver, onDrop }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const [isCheckedIn, setIsCheckedIn] = useState(false);

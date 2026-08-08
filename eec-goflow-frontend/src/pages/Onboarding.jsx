@@ -5,6 +5,10 @@ import { Plane, Coffee, Trees, Wallet, MapPin, Loader2, Users, CalendarDays } fr
 export default function Onboarding() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizStep, setQuizStep] = useState(0);
+  const [quizAnswers, setQuizAnswers] = useState({});
+
   const [formData, setFormData] = useState({
     province: 'ชลบุรี',
     days: 1,
@@ -13,6 +17,53 @@ export default function Onboarding() {
     age: '20-30',
     travel_style: []
   });
+
+  const quizQuestions = [
+    {
+      q: "เช้าวันหยุด คุณมักจะ...",
+      options: [
+        { text: "จิบกาแฟชิลๆ ถ่ายรูปอัปโซเชียล", value: { style: "คาเฟ่ถ่ายรูป" } },
+        { text: "ออกไปสูดอากาศ ลุยป่าเขาธรรมชาติ", value: { style: "ธรรมชาติดูเขา" } }
+      ]
+    },
+    {
+      q: "ถ้ามีทริปพิเศษ คุณจะให้ความสำคัญกับ...",
+      options: [
+        { text: "กินหรูอยู่สบาย ให้รางวัลตัวเองขั้นสุด", value: { budget: "หรูหรา" } },
+        { text: "กินง่ายอยู่ง่าย เน้นประสบการณ์แบบ Local", value: { budget: "ประหยัด" } }
+      ]
+    },
+    {
+      q: "จุดหมายปลายทางในฝันของคุณคือ...",
+      options: [
+        { text: "ปล่อยใจริมหาด ฟังเสียงคลื่นรับลมทะเล", value: { style: "ทะเลพักใจ" } },
+        { text: "ไหว้พระทำบุญ หาความสงบทางจิตใจ", value: { style: "ไหว้พระสายมู" } }
+      ]
+    }
+  ];
+
+  const handleQuizAnswer = (value) => {
+    const newAnswers = { ...quizAnswers, ...value };
+    if (value.style) {
+      newAnswers.styles = [...(quizAnswers.styles || []), value.style];
+    }
+    setQuizAnswers(newAnswers);
+
+    if (quizStep < quizQuestions.length - 1) {
+      setQuizStep(quizStep + 1);
+    } else {
+      // Finish Quiz
+      setFormData(prev => ({
+        ...prev,
+        budget: newAnswers.budget || 'ปานกลาง',
+        travel_style: newAnswers.styles || ['ทะเลพักใจ']
+      }));
+      setShowQuiz(false);
+      setQuizStep(0);
+      setQuizAnswers({});
+      alert("AI วิเคราะห์ตัวตนของคุณเสร็จแล้ว! เราได้ทำการตั้งค่าฟอร์มให้คุณอัตโนมัติ 🪄");
+    }
+  };
 
   const toggleStyle = (style) => {
     setFormData(prev => ({
@@ -60,9 +111,57 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-3xl p-8 shadow-sm border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <h2 className="text-3xl font-bold text-slate-800 mb-2">ออกแบบทริปของคุณ 🏖️</h2>
-      <p className="text-slate-500 mb-8">บอกเราว่าคุณชอบเที่ยวแบบไหน แล้วให้ AI จัดการที่เหลือ</p>
+    <div className="max-w-2xl mx-auto bg-white rounded-3xl p-8 shadow-sm border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+      
+      {/* Quiz Modal Overlay */}
+      {showQuiz && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl relative animate-in zoom-in-95">
+            <button onClick={() => setShowQuiz(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+              <i className="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner">
+                🔮
+              </div>
+              <h3 className="text-xl font-bold text-slate-800">ค้นหา Travel Persona</h3>
+              <p className="text-sm text-slate-500 mt-1">คำถามที่ {quizStep + 1} จาก {quizQuestions.length}</p>
+            </div>
+            
+            <h4 className="text-lg font-bold text-slate-700 text-center mb-6">
+              {quizQuestions[quizStep].q}
+            </h4>
+            
+            <div className="space-y-3">
+              {quizQuestions[quizStep].options.map((opt, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleQuizAnswer(opt.value)}
+                  className="w-full text-left px-5 py-4 rounded-2xl border-2 border-slate-100 hover:border-blue-400 hover:bg-blue-50 text-slate-700 font-bold transition-all shadow-sm group"
+                >
+                  <span className="inline-block w-8 h-8 bg-slate-100 group-hover:bg-blue-200 text-center leading-8 rounded-full mr-3 text-slate-500 group-hover:text-blue-700 transition">
+                    {String.fromCharCode(65 + idx)}
+                  </span>
+                  {opt.text}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h2 className="text-3xl font-bold text-slate-800 mb-2">ออกแบบทริปของคุณ 🏖️</h2>
+          <p className="text-slate-500">บอกเราว่าคุณชอบเที่ยวแบบไหน แล้วให้ AI จัดการที่เหลือ</p>
+        </div>
+        <button 
+          onClick={() => setShowQuiz(true)}
+          className="bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-purple-500/30 transition flex items-center gap-2 animate-bounce hover:animate-none"
+        >
+          <i className="fa-solid fa-wand-magic-sparkles"></i> AI แบบทดสอบ
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         

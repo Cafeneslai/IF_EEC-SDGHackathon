@@ -86,7 +86,7 @@ export default function Home() {
           </div>
 
           <div className="pt-2 flex flex-wrap gap-3">
-            <Link to="/itinerary" className="theme-btn-primary font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-xl flex items-center gap-2">
+            <Link to="/onboarding" className="theme-btn-primary font-extrabold px-5 py-2.5 rounded-xl text-xs shadow-xl flex items-center gap-2">
               <i className="fa-solid fa-wand-magic-sparkles"></i> ให้ AI จัดทริปอัตโนมัติ
             </Link>
             <Link to="/map" className="bg-white/10 backdrop-blur text-white font-bold px-5 py-2.5 rounded-xl text-xs hover:bg-white/20 transition flex items-center gap-2 border border-white/20">

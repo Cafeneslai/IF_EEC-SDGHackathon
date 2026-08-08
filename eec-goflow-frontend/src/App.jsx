@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Chatbot from './components/Chatbot';
+import PDPABanner from './components/PDPABanner';
 
 function AppContent() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -77,7 +78,7 @@ function AppContent() {
             <Link to="/" className={`px-4 py-2 rounded-xl text-xs font-bold transition shadow ${isCurrentPage('/') ? 'theme-text-sec bg-navy' : 'text-slate-300 hover:text-white'}`}>
               <i className="fa-solid fa-house mr-1"></i> หน้าแรก
             </Link>
-            <Link to="/itinerary" className={`px-4 py-2 rounded-xl text-xs font-bold transition ${isCurrentPage('/itinerary') ? 'theme-text-sec bg-navy shadow' : 'text-slate-300 hover:text-white'}`}>
+            <Link to="/onboarding" className={`px-4 py-2 rounded-xl text-xs font-bold transition ${isCurrentPage('/onboarding') ? 'theme-text-sec bg-navy shadow' : 'text-slate-300 hover:text-white'}`}>
               <i className="fa-solid fa-wand-magic-sparkles mr-1 theme-text-sec"></i> AI จัดทริป
             </Link>
             <Link to="/map" className={`px-4 py-2 rounded-xl text-xs font-bold transition ${isCurrentPage('/map') ? 'theme-text-sec bg-navy shadow' : 'text-slate-300 hover:text-white'}`}>
@@ -131,7 +132,7 @@ function AppContent() {
           <i className="fa-solid fa-house mb-1 text-lg"></i>
           <span className="text-[10px] font-medium">หน้าแรก</span>
         </Link>
-        <Link to="/itinerary" className={`flex flex-col items-center p-2 rounded-xl transition ${isCurrentPage('/itinerary') ? 'theme-text-sec bg-slate-800/50' : 'text-slate-400'}`}>
+        <Link to="/onboarding" className={`flex flex-col items-center p-2 rounded-xl transition ${isCurrentPage('/onboarding') ? 'theme-text-sec bg-slate-800/50' : 'text-slate-400'}`}>
           <i className="fa-solid fa-wand-magic-sparkles mb-1 text-lg theme-text-sec"></i>
           <span className="text-[10px] font-medium">AI ทริป</span>
         </Link>
@@ -155,6 +156,9 @@ function AppContent() {
 
       {/* Floating AI Chatbot */}
       <Chatbot />
+
+      {/* PDPA Banner */}
+      <PDPABanner />
     </div>
   );
 }
