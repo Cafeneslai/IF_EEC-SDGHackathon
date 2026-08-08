@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plane, Coffee, Trees, Wallet, MapPin, Loader2 } from 'lucide-react';
+import { Plane, Coffee, Trees, Wallet, MapPin, Loader2, Users, CalendarDays } from 'lucide-react';
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -9,6 +9,8 @@ export default function Onboarding() {
     province: 'ชลบุรี',
     days: 1,
     budget: 'ปานกลาง',
+    travelers: 2,
+    age: '20-30',
     travel_style: []
   });
 
@@ -35,6 +37,8 @@ export default function Onboarding() {
           userId: 1, // อ้างอิง ID จาก User จำลองที่สร้างไว้
           days: formData.days,
           budget: formData.budget,
+          travelers: formData.travelers,
+          age: formData.age,
           travel_style: formData.travel_style,
           province: formData.province
         })
@@ -109,6 +113,38 @@ export default function Onboarding() {
               <option value="ประหยัด">ประหยัดเน้นคุ้มค่า</option>
               <option value="ปานกลาง">ปานกลางสบายๆ</option>
               <option value="หรู">หรูหราจัดเต็ม</option>
+            </select>
+          </div>
+        </div>
+
+        {/* ผู้เดินทาง & อายุ */}
+        <div className="grid grid-cols-2 gap-6">
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <Users className="w-4 h-4 text-orange-500"/> จำนวนผู้เดินทาง
+            </label>
+            <input 
+              type="number" 
+              min="1" max="20" 
+              value={formData.travelers}
+              onChange={(e) => setFormData({...formData, travelers: parseInt(e.target.value)})}
+              className="w-full py-3 px-4 rounded-xl border-2 border-slate-200 outline-none focus:border-blue-500 transition-colors text-slate-700 font-medium"
+            />
+          </div>
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-purple-500"/> ช่วงอายุ
+            </label>
+            <select 
+              value={formData.age}
+              onChange={(e) => setFormData({...formData, age: e.target.value})}
+              className="w-full py-3 px-4 rounded-xl border-2 border-slate-200 outline-none focus:border-blue-500 transition-colors text-slate-700 font-medium bg-white"
+            >
+              <option value="วัยรุ่น (15-25)">วัยรุ่น (15-25 ปี)</option>
+              <option value="วัยทำงาน (26-40)">วัยทำงาน (26-40 ปี)</option>
+              <option value="ผู้ใหญ่ (41-60)">ผู้ใหญ่ (41-60 ปี)</option>
+              <option value="ผู้สูงอายุ (60+)">ผู้สูงอายุ (60+ ปี)</option>
+              <option value="ครอบครัวที่มีเด็ก">ครอบครัวที่มีเด็ก</option>
             </select>
           </div>
         </div>

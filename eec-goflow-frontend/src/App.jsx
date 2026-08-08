@@ -4,10 +4,27 @@ import Home from './pages/Home';
 import Onboarding from './pages/Onboarding';
 import Itinerary from './pages/Itinerary';
 import SmartMap from './pages/SmartMap';
+import Login from './pages/Login';
+import Register from './pages/Register';
 
 function AppContent() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const location = useLocation();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {}
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
+  };
 
   useEffect(() => {
     if (isDarkMode) {
@@ -82,6 +99,24 @@ function AppContent() {
               <button onClick={() => setTheme('emerald')} title="Emerald Eco" className="w-4 h-4 rounded-full bg-emerald-500 hover:scale-125 transition border border-white/30"></button>
               <button onClick={() => setTheme('violet')} title="Neon Violet" className="w-4 h-4 rounded-full bg-purple-500 hover:scale-125 transition border border-white/30"></button>
             </div>
+
+            {/* User Profile / Login */}
+            {user ? (
+              <div className="hidden md:flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-2xl border border-slate-700 ml-2">
+                <i className="fa-solid fa-user-circle text-emerald-400 text-lg"></i>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-white leading-tight">{user.name}</span>
+                  <span className="text-[9px] text-amber-400 leading-tight">{user.points} SDG Points</span>
+                </div>
+                <button onClick={handleLogout} className="ml-2 text-[10px] text-red-400 hover:text-red-300">
+                  <i className="fa-solid fa-right-from-bracket"></i>
+                </button>
+              </div>
+            ) : (
+              <Link to="/login" className="hidden md:flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold transition shadow-lg shadow-blue-500/20 ml-2 border border-blue-400/30">
+                <i className="fa-solid fa-arrow-right-to-bracket"></i> เข้าสู่ระบบ
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -108,6 +143,8 @@ function AppContent() {
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/itinerary" element={<Itinerary />} />
           <Route path="/map" element={<SmartMap />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </main>
     </div>

@@ -9,10 +9,12 @@ datasource db {
 
 model User {
   id              Int               @id @default(autoincrement())
+  email           String            @unique
+  password        String
   name            String
   age             Int?
-  budget_level    String            // ประหยัด, ปานกลาง, หรู
-  travel_style    String            // เก็บเป็น JSON string เช่น '["nature", "cafe"]'
+  budget_level    String?           // ประหยัด, ปานกลาง, หรู
+  travel_style    String?           // เก็บเป็น JSON string เช่น '["nature", "cafe"]'
   points          Int               @default(0)
   trips           Trip[]
   userCheckpoints UserCheckpoint[]

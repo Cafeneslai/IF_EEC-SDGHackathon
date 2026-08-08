@@ -7,10 +7,12 @@ async function main() {
   // สร้าง User จำลอง
   const user = await prisma.user.create({
     data: {
-      name: 'Test User',
+      email: "test@example.com",
+      password: "password123",
+      name: "Test User",
       age: 25,
-      budget_level: 'ปานกลาง',
-      travel_style: '["nature", "cafe"]',
+      budget_level: "ปานกลาง",
+      travel_style: JSON.stringify(["ทะเลพักใจ", "คาเฟ่ถ่ายรูป"]),
       points: 100
     }
   });
