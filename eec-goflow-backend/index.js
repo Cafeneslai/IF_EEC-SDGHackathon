@@ -48,6 +48,24 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// --- 1.5 User Dashboard API ---
+app.get('/api/users/dashboard', async (req, res) => {
+  const { userId } = req.query;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+      include: {
+        trips: { orderBy: { id: 'desc' } }
+      }
+    });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error("Dashboard Error:", error);
+    res.status(500).json({ error: 'Failed to fetch dashboard data' });
+  }
+});
+
 // --- 2. Locations API ---
 app.get('/api/locations', async (req, res) => {
   const { province, type } = req.query;
@@ -144,17 +162,27 @@ app.post('/api/trips/generate', async (req, res) => {
       });
     }
 
-    // 3. Save to database
-    const trip = await prisma.trip.create({
-      data: {
-        userId,
-        startDate: new Date(),
-        endDate: new Date(Date.now() + (days * 24 * 60 * 60 * 1000)),
-        itinerary: JSON.stringify(aiPlan)
-      }
-    });
+    // 3. Save to database if userId exists
+    let savedTripId = null;
+    if (userId) {
+      const trip = await prisma.trip.create({
+        data: {
+          userId: parseInt(userId),
+          startDate: new Date(),
+          endDate: new Date(Date.now() + (days * 24 * 60 * 60 * 1000)),
+          itinerary: JSON.stringify(aiPlan)
+        }
+      });
+      savedTripId = trip.id;
+      
+      // Update points
+      await prisma.user.update({
+        where: { id: parseInt(userId) },
+        data: { points: { increment: 50 } }
+      });
+    }
 
-    res.json({ ...trip, fullPlan: aiPlan });
+    res.json({ success: true, plan: aiPlan, savedTripId });
   } catch (error) {
     res.status(500).json({ error: 'Failed to generate trip', details: error.message });
   }

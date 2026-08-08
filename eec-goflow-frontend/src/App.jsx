@@ -6,6 +6,8 @@ import Itinerary from './pages/Itinerary';
 import SmartMap from './pages/SmartMap';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Chatbot from './components/Chatbot';
 
 function AppContent() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -103,11 +105,13 @@ function AppContent() {
             {/* User Profile / Login */}
             {user ? (
               <div className="hidden md:flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-2xl border border-slate-700 ml-2">
-                <i className="fa-solid fa-user-circle text-emerald-400 text-lg"></i>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-white leading-tight">{user.name}</span>
-                  <span className="text-[9px] text-amber-400 leading-tight">{user.points} SDG Points</span>
-                </div>
+                <Link to="/dashboard" className="flex items-center gap-2 hover:bg-slate-700 p-1 rounded-xl transition cursor-pointer">
+                  <i className="fa-solid fa-user-circle text-emerald-400 text-lg"></i>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-white leading-tight">{user.name}</span>
+                    <span className="text-[9px] text-amber-400 leading-tight">{user.points} SDG Points</span>
+                  </div>
+                </Link>
                 <button onClick={handleLogout} className="ml-2 text-[10px] text-red-400 hover:text-red-300">
                   <i className="fa-solid fa-right-from-bracket"></i>
                 </button>
@@ -145,8 +149,12 @@ function AppContent() {
           <Route path="/map" element={<SmartMap />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </main>
+
+      {/* Floating AI Chatbot */}
+      <Chatbot />
     </div>
   );
 }

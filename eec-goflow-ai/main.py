@@ -1,8 +1,17 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import ollama
 
 app = FastAPI(title="EEC GoFlow AI Service")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class TripRequest(BaseModel):
     days: int
@@ -161,6 +170,31 @@ def regenerate_place(request: RegenerateRequest):
             continue
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Ollama Error: {str(e)}")
+
+class ChatRequest(BaseModel):
+    message: str
+
+@app.post("/chat")
+def chat_with_ai(request: ChatRequest):
+    prompt = f"""
+    คุณคือ "น้อง GoFlow" ไกด์นำเที่ยว AI สุดร่าเริงและเชี่ยวชาญด้านการท่องเที่ยวในเขตพัฒนาพิเศษภาคตะวันออก (EEC: ชลบุรี, ระยอง, ฉะเชิงเทรา)
+    คุณมีเป้าหมายหลักคือการสนับสนุนการท่องเที่ยวอย่างยั่งยืน (SDG) และกระจายรายได้สู่ชุมชน
+    
+    กฎในการตอบ:
+    1. แทนตัวเองว่า "น้อง GoFlow" และลงท้ายด้วย "ครับ" เสมอ
+    2. ตอบด้วยน้ำเสียงเป็นมิตร กระตือรือร้น และใช้ Emoji สื่ออารมณ์
+    3. หากมีการแนะนำสถานที่ ให้พยายามแทรกเรื่องการลดคาร์บอนฟุตพริ้นท์ (Eco-tips) หรือการอุดหนุนสินค้า OTOP ชุมชนแบบเนียนๆ
+    4. ตอบให้สั้น กระชับ อ่านง่าย (ไม่เกิน 3-4 ประโยค)
+    
+    ผู้ใช้ถามว่า: {request.message}
+    """
+    try:
+        response = ollama.chat(model='llama3.1', messages=[
+            {'role': 'user', 'content': prompt}
+        ])
+        return {"reply": response['message']['content'].strip()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chat Error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
