@@ -56,11 +56,23 @@ app.post('/api/trips/generate', async (req, res) => {
   const { userId, days, budget, travel_style, province } = req.body;
   
   try {
-    // 1. Call AI Service (Python)
+    // 1. Fetch available locations from DB to ground the AI
+    const locations = await prisma.location.findMany({
+      where: { province: province }
+    });
+    const locationNames = locations.map(loc => `${loc.name} (${loc.type})`).join(', ');
+
+    // 2. Call AI Service (Python)
     const aiResponse = await fetch('http://127.0.0.1:8000/generate-plan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ days, budget, travel_style, province })
+      body: JSON.stringify({ 
+        days, 
+        budget, 
+        travel_style, 
+        province,
+        available_locations: locationNames
+      })
     });
     const aiPlan = await aiResponse.json();
 
@@ -70,13 +82,40 @@ app.post('/api/trips/generate', async (req, res) => {
         userId,
         startDate: new Date(),
         endDate: new Date(Date.now() + (days * 24 * 60 * 60 * 1000)),
-        itinerary: aiPlan.plan
+        itinerary: JSON.stringify(aiPlan)
       }
     });
 
-    res.json(trip);
+    res.json({ ...trip, fullPlan: aiPlan });
   } catch (error) {
     res.status(500).json({ error: 'Failed to generate trip', details: error.message });
+  }
+});
+
+// --- 5. Regenerate Single Place API ---
+app.post('/api/trips/regenerate-place', async (req, res) => {
+  const { province, current_place, time } = req.body;
+  try {
+    const locations = await prisma.location.findMany({
+      where: { province: province }
+    });
+    const locationNames = locations.map(loc => `${loc.name} (${loc.type})`).join(', ');
+
+    const aiResponse = await fetch('http://127.0.0.1:8000/regenerate-place', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        province, 
+        current_place, 
+        time, 
+        available_locations: locationNames 
+      })
+    });
+    
+    const aiData = await aiResponse.json();
+    res.json(aiData);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to regenerate place', details: error.message });
   }
 });
 

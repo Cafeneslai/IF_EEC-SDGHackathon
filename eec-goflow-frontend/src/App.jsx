@@ -28,7 +28,7 @@ function AppContent() {
   const isCurrentPage = (path) => location.pathname === path;
 
   return (
-    <div className="min-h-screen flex flex-col font-sans">
+    <div className="min-h-screen flex flex-col font-sans mesh-bg transition-colors duration-500">
       {/* DESKTOP TOP NAVBAR WITH SEARCH, DARK MODE & THEME SWITCHER */}
       <header className="bg-navy text-white sticky top-0 z-50 shadow-xl border-b border-slate-800 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-6 py-3.5 flex justify-between items-center gap-4">

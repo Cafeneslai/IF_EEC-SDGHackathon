@@ -46,8 +46,8 @@ export default function Onboarding() {
       }
       
       setLoading(false);
-      // ส่งต่อข้อมูลไปหน้า Itinerary
-      navigate('/itinerary', { state: { plan: data.itinerary } });
+      // ส่งต่อข้อมูลไปหน้า Itinerary พร้อมกับ province
+      navigate('/itinerary', { state: { plan: data.fullPlan || data.itinerary, province: formData.province } });
     } catch (error) {
       console.error(error);
       setLoading(false);
