@@ -88,7 +88,7 @@ def generate_plan(request: TripRequest):
                     'role': 'user',
                     'content': prompt
                 }
-            ])
+            ], format='json')
             
             raw_content = response['message']['content']
             

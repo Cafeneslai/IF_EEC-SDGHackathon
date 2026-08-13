@@ -31,7 +31,7 @@
 - 🛍️ **Local Discovery:** ระบบบังคับแทรกสถานที่ที่เป็นสินค้า OTOP หรือวิสาหกิจชุมชน อย่างน้อย 1 แห่งต่อวัน พร้อมเล่าเรื่องราวอัตลักษณ์เพื่อเพิ่มรายได้ให้ท้องถิ่น
 - 🗺️ **Smart Map (Leaflet):** แผนที่ Interactive แสดงหมุดสถานที่จริง ดึงพิกัด (Lat/Lng) จากฐานข้อมูล พร้อมแยกสีตามหมวดหมู่
 - 📸 **Share Trip (Export to Image):** ผู้ใช้สามารถกดแชร์แพลนทั้งหมดออกมาเป็นรูปภาพสวยงามเพื่อแชร์ลง Social Media ได้ทันที
-- 🎨 **Premium Glassmorphism UI:** ดีไซน์หน้าเว็บล้ำสมัย หรูหรา สไตล์กระจกฝ้า พร้อมระบบเปลี่ยนธีมสี (Color Themes)
+- 🎨 **Premium Glassmorphism & Micro-Interactions:** ดีไซน์หน้าเว็บล้ำสมัย สไตล์กระจกฝ้า พร้อมระบบ Beautiful Toasts (Sonner), 3D Hover Effects และ Animated Aurora Background
 - 🎁 **SDG Rewards Store:** ระบบแลกคะแนนรักษ์โลก (SDG Points) เป็นส่วนลดร้านค้า OTOP หรือตั๋วโดยสารสาธารณะ สนับสนุนเศรษฐกิจชุมชนและลดคาร์บอน
 - 🧩 **Drag & Drop Itinerary:** ผู้ใช้สามารถลาก-วาง สลับลำดับสถานที่ในแผนการเดินทางได้อย่างอิสระผ่านระบบ HTML5 Drag and Drop
 - 😷 **Live AQI & Weather Alert:** ดึงข้อมูลฝุ่น PM2.5 แบบ Real-time พร้อมแสดงป้ายเตือนหากอากาศเป็นพิษ เพื่อแนะนำให้สลับไปสถานที่ในร่ม
@@ -47,7 +47,7 @@
 ระบบถูกออกแบบเป็น Microservices 3 ส่วนหลักเพื่อการขยายตัว (Scalability):
 
 1. **📱 Frontend (`eec-goflow-frontend/`)**
-   - **Tech Stack:** React 18, Vite, TailwindCSS, React Router v6, Leaflet, html2canvas
+   - **Tech Stack:** React 18, Vite, TailwindCSS, React Router v6, Leaflet, Framer Motion, Sonner
    - **หน้าที่:** จัดการ UI/UX สุดพรีเมียม และรับคำสั่งจากผู้ใช้
 2. **⚙️ Backend (`eec-goflow-backend/`)**
    - **Tech Stack:** Node.js 20, Express.js, Prisma ORM, SQLite

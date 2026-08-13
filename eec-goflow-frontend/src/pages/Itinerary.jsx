@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Navigation, Clock, Sunrise, Sun, Sunset, AlertCircle, CalendarX2, CloudSun, Wallet, Leaf, RefreshCw, Loader2, Share2, CheckCircle2, Users } from 'lucide-react';
+import { MapPin, Navigation, Clock, Sunrise, Sun, Sunset, AlertCircle, CalendarX2, CloudSun, Wallet, Leaf, RefreshCw, Loader2, Share2, CheckCircle2, Users, Compass, QrCode, ScanEye } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
-import html2canvas from 'html2canvas';
+import * as htmlToImage from 'html-to-image';
+import { toast } from 'sonner';
 import ItineraryMap from '../components/ItineraryMap';
+import ARViewer from '../components/ARViewer';
 
 export default function Itinerary() {
   const location = useLocation();
@@ -14,6 +16,7 @@ export default function Itinerary() {
   const [isExporting, setIsExporting] = useState(false);
   const [aqiData, setAqiData] = useState(null);
   const [draggedIdx, setDraggedIdx] = useState(null);
+  const [showAR, setShowAR] = useState(false);
   
   useEffect(() => {
     if (location.state && location.state.plan) {
@@ -69,7 +72,10 @@ export default function Itinerary() {
     fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${target.lat}&longitude=${target.lng}&current=european_aqi,pm2_5`)
       .then(res => res.json())
       .then(data => {
-        if (data && data.current) {
+        if (localStorage.getItem('forceAqi') === 'true') {
+          // Secret Demo Mode Override
+          setAqiData({ pm2_5: 65, aqi: 152 });
+        } else if (data && data.current) {
           setAqiData({ pm2_5: data.current.pm2_5, aqi: data.current.european_aqi });
         }
       })
@@ -77,18 +83,18 @@ export default function Itinerary() {
   }, [currentProvince]);
 
   const handleShare = async () => {
-    const element = document.getElementById('itinerary-export-area');
+    const element = document.getElementById('ig-story-template');
     if (!element) return;
     setIsExporting(true);
     try {
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#f0fdf4' });
-      const image = canvas.toDataURL("image/png");
+      const dataUrl = await htmlToImage.toJpeg(element, { quality: 0.95, backgroundColor: '#0f172a' });
       const link = document.createElement('a');
-      link.href = image;
-      link.download = `EEC_Trip_${currentProvince}.png`;
+      link.download = `EEC_Story_${currentProvince}.jpg`;
+      link.href = dataUrl;
       link.click();
     } catch (err) {
       console.error("Export failed", err);
+      toast.error("เกิดข้อผิดพลาดในการโหลดรูปภาพ", { description: err.message });
     }
     setIsExporting(false);
   };
@@ -112,6 +118,11 @@ export default function Itinerary() {
         newPlace = JSON.parse(newPlace);
       }
       
+      // Unwrap if AI nested it inside another 'place' object
+      if (newPlace && newPlace.place) {
+        newPlace = newPlace.place;
+      }
+      
       if (newPlace && newPlace.location) {
         setPlanData(prev => {
           const newPlan = [...prev.plan];
@@ -126,9 +137,11 @@ export default function Itinerary() {
         });
       } else {
          console.error("AI returned invalid format for replacement", data);
+         toast.error("ข้อผิดพลาด", { description: "AI ส่งข้อมูลกลับมาไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง" });
       }
     } catch (error) {
       console.error("Failed to regenerate place from AI", error);
+      toast.error("ข้อผิดพลาดเซิร์ฟเวอร์", { description: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ AI ได้ (" + error.message + ")" });
     }
   };
 
@@ -195,22 +208,31 @@ export default function Itinerary() {
   const activeDayData = planData.plan.find(d => d.day === activeDay) || planData.plan[0];
   const activeTimelineItems = activeDayData?.itinerary || [];
   
+  if (showAR) return <ARViewer onClose={() => setShowAR(false)} itinerary={activeTimelineItems} />;
+
   return (
     <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
       {/* Timeline Section */}
       <div className="flex-1" id="itinerary-export-area" style={{ padding: isExporting ? '20px' : '0' }}>
-        <div className="flex items-center justify-between mb-8">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h2 className="text-3xl font-bold text-slate-800">แพลนท่องเที่ยวของคุณ</h2>
+            <h1 className="text-3xl font-black text-slate-800">แพลนท่องเที่ยวของคุณ</h1>
             <p className="text-slate-500">จัดสรรโดยระบบ AI อัจฉริยะจากความต้องการของคุณ</p>
           </div>
-          {!isExporting && (
-            <button onClick={handleShare} disabled={isExporting} className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-xl font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all shadow-sm">
-              {isExporting ? <Loader2 className="w-4 h-4 animate-spin"/> : <Share2 className="w-4 h-4"/>} 
-              บันทึก & แชร์ทริป
+          <div className="flex items-center gap-3">
+            <button onClick={() => setShowAR(true)} className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-white px-5 py-2.5 rounded-xl font-bold hover:shadow-lg hover:shadow-cyan-500/30 transition-all shadow-sm">
+              <ScanEye className="w-5 h-5"/>
+              AR Local Explorer
             </button>
-          )}
+            {!isExporting && (
+              <button onClick={handleShare} disabled={isExporting} className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white px-5 py-2.5 rounded-xl font-bold hover:shadow-lg hover:shadow-pink-500/30 transition-all shadow-sm">
+                {isExporting ? <Loader2 className="w-4 h-4 animate-spin"/> : <i className="fa-brands fa-instagram text-lg"></i>} 
+                IG Story Export
+              </button>
+            )}
+          </div>
         </div>
 
           {/* Multi-Day Tabs */}
@@ -339,6 +361,79 @@ export default function Itinerary() {
         )}
 
       </div>
+
+      {/* IG STORY EXPORT TEMPLATE (HIDDEN) */}
+      <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
+        <div id="ig-story-template" className="w-[1080px] h-[1920px] bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 p-20 flex flex-col justify-between text-white font-sans relative overflow-hidden">
+          {/* Background decorations */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -mr-20 -mt-20"></div>
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-3xl -ml-20 -mb-20"></div>
+          
+          {/* Header */}
+          <div className="relative z-10">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="bg-white/20 p-4 rounded-3xl backdrop-blur-md">
+                <Compass className="w-12 h-12 text-cyan-300" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h1 className="text-6xl font-black tracking-tight">EEC <span className="text-cyan-300">Journey</span></h1>
+                <p className="text-3xl font-light text-blue-200 mt-2">AI Travel Companion</p>
+              </div>
+            </div>
+            <h2 className="text-8xl font-black mb-6 mt-16 leading-tight">ทริปสุดชิลที่<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400">{currentProvince}</span></h2>
+            <div className="flex gap-6 mt-8">
+              <div className="bg-white/10 backdrop-blur-md px-8 py-4 rounded-2xl border border-white/20">
+                <p className="text-2xl text-blue-200 mb-1">ระยะเวลา</p>
+                <p className="text-4xl font-bold">{planData.plan.length} วัน</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-md px-8 py-4 rounded-2xl border border-white/20">
+                <p className="text-2xl text-blue-200 mb-1">งบประมาณ</p>
+                <p className="text-4xl font-bold">฿{estBudget.toLocaleString()}</p>
+              </div>
+              <div className="bg-gradient-to-br from-emerald-400/20 to-teal-500/20 backdrop-blur-md px-8 py-4 rounded-2xl border border-emerald-400/30">
+                <p className="text-2xl text-emerald-200 mb-1">Eco Score</p>
+                <p className="text-4xl font-bold text-emerald-300">{ecoScore} / 100</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Itinerary Highlights */}
+          <div className="relative z-10 flex-1 flex flex-col justify-center mt-12 mb-12 space-y-6">
+            <h3 className="text-4xl font-bold text-blue-200 mb-4 flex items-center gap-3">
+              <MapPin className="w-10 h-10" /> ไฮไลท์การเดินทาง
+            </h3>
+            {planData.plan[0]?.itinerary.slice(0, 4).map((item, idx) => (
+              <div key={idx} className="bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/20 flex items-center gap-6 shadow-2xl">
+                <div className="w-20 h-20 bg-blue-500/30 rounded-2xl flex items-center justify-center shrink-0 border border-blue-400/30">
+                  <span className="text-2xl font-bold text-blue-200">{item.time}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-4xl font-bold mb-2 text-white truncate">{item.location || item.title || item.place}</h4>
+                  <p className="text-2xl text-blue-200 truncate">{item.description || item.desc}</p>
+                </div>
+              </div>
+            ))}
+            {planData.plan[0]?.itinerary.length > 4 && (
+              <p className="text-2xl text-center text-blue-300 mt-4 font-medium italic">และสถานที่อื่นๆ อีกมากมาย...</p>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="relative z-10 border-t border-white/20 pt-8 flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-bold mb-2">จัดทริปง่ายๆ รักษ์โลกด้วย AI</p>
+              <p className="text-xl text-blue-200">#EECGoFlow #Hackathon #TravelTech</p>
+            </div>
+            <div className="text-right flex items-center gap-4 bg-white/10 p-4 rounded-2xl backdrop-blur-md">
+               <QrCode className="w-12 h-12 text-white" />
+               <div className="text-xl font-bold text-blue-200 text-left">สแกนเพื่อ<br/>จัดทริปฟรี</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* AR VIEWER MODAL */}
+      {showAR && <ARViewer onClose={() => setShowAR(false)} province={currentProvince} />}
     </div>
   );
 }
@@ -391,7 +486,7 @@ function ItineraryCard({ data, onRegenerate, index, onDragStart, onDragOver, onD
           </div>
         )}
 
-        <div className={`backdrop-blur-xl p-6 rounded-2xl ${cardBorderClass} ${isSpinning ? 'opacity-50 blur-[2px] scale-[0.98]' : 'opacity-100'} transition-all duration-300`}>
+        <div className={`backdrop-blur-xl p-6 rounded-2xl ${cardBorderClass} ${isSpinning ? 'opacity-50 blur-[2px] scale-[0.98]' : 'opacity-100'} transition-all duration-300 hover:scale-[1.03] hover:shadow-cyan-500/20 hover:border-cyan-300/50 cursor-pointer`}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-md flex items-center gap-1">

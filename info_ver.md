@@ -1,6 +1,19 @@
 # 📦 EEC GoFlow - Version Info & Changelog
 
-## 🚀 Version 4.0 (Hackathon Ultimate Edition)
+## 🚀 Version 5.0 (Pitching Ready - The WOW Update)
+*Date: August 2026*
+
+**Major Features Added (The WOW Factors):**
+- 📸 **IG Story Exporter:** Added one-click export feature allowing users to render their trip plan into a beautiful 9:16 vertical poster for social media viral growth (`html-to-image`).
+- 👁️ **AR Local Explorer:** Implemented WebRTC to access the device's camera for a simulated Augmented Reality view, showing floating 3D markers for OTOP and local attractions.
+- 🎖️ **Gamification Leveling System:** Upgraded the Dashboard with an EXP progress bar and dynamic badges (Seedling 🌱 -> Forest Guardian 🌳) to boost customer retention.
+- 🎙️ **AI Voice Visualizer:** Added an animated soundwave effect to the Chatbot that reacts when the Web Speech API is actively listening to the user's voice.
+- 💎 **Ultra-Premium UI/UX Polish:** Replaced all native browser alerts with beautiful modern toast notifications using `sonner`. Added a subtle animated Aurora gradient mesh background and a custom glass-like scrollbar.
+- ⚙️ **AI Fail-Safe & Reliability:** Increased Ollama generation timeouts and implemented a seamless auto-switch to beautiful mock data if the AI server becomes unreachable, ensuring the live demo never fails.
+
+---
+
+## 🌟 Version 4.0 (Hackathon Ultimate Edition)
 *Date: August 2026*
 
 **Major Features Added:**

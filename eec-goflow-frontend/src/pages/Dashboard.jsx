@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Award, Leaf, Map, Calendar, Loader2, Gift, CheckCircle2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { toast } from 'sonner';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -57,9 +58,10 @@ export default function Dashboard() {
       localStorage.setItem('user', JSON.stringify({ ...savedUser, points: newPoints }));
       
       setRedeemSuccess(`แลกรับ ${itemName} สำเร็จ!`);
+      toast.success(`แลกรับ ${itemName} สำเร็จ!`);
       setTimeout(() => setRedeemSuccess(null), 3000);
     } else {
-      alert('คะแนนสะสมของคุณไม่เพียงพอสำหรับการแลกรับสิทธิ์นี้');
+      toast.error('คะแนนสะสมไม่เพียงพอ', { description: 'คะแนนสะสมของคุณไม่เพียงพอสำหรับการแลกรับสิทธิ์นี้' });
     }
   };
 
@@ -89,11 +91,57 @@ export default function Dashboard() {
     { name: 'Remaining', value: 100 - avgEcoScore, color: '#e2e8f0' }
   ];
 
+  // Gamification Logic
+  let level = 1;
+  let levelName = "Seedling (ต้นกล้า)";
+  let badgeIcon = "🌱";
+  let badgeColor = "from-emerald-400 to-teal-500";
+  let nextLevelPts = 1000;
+  let progressPct = Math.min(((user.points || 0) / nextLevelPts) * 100, 100);
+
+  if (user.points >= 5000) {
+    level = 3;
+    levelName = "Forest Guardian (ผู้พิทักษ์ป่า)";
+    badgeIcon = "🌳";
+    badgeColor = "from-amber-400 to-orange-500";
+    nextLevelPts = user.points; // Max level
+    progressPct = 100;
+  } else if (user.points >= 1000) {
+    level = 2;
+    levelName = "Eco Traveler (นักเดินทางสีเขียว)";
+    badgeIcon = "🌿";
+    badgeColor = "from-blue-400 to-indigo-500";
+    nextLevelPts = 5000;
+    progressPct = (((user.points || 0) - 1000) / 4000) * 100;
+  }
+
   return (
     <div className="max-w-4xl mx-auto mt-6 mb-12">
-      <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <h1 className="text-3xl font-black text-slate-800 mb-2">My Dashboard 📊</h1>
         <p className="text-slate-500">ยินดีต้อนรับกลับมา, {user.name} โลกนี้ดีขึ้นได้ด้วยการเดินทางของคุณ!</p>
+      </div>
+
+      {/* Gamification Level Banner */}
+      <div className={`mb-8 p-6 rounded-3xl bg-gradient-to-r ${badgeColor} text-white shadow-lg relative overflow-hidden flex flex-col md:flex-row items-center gap-6 animate-in zoom-in-95 duration-500`}>
+        <div className="absolute -top-10 -right-10 text-[150px] opacity-20 pointer-events-none filter blur-sm">
+          {badgeIcon}
+        </div>
+        <div className="w-24 h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-5xl border-4 border-white/30 shadow-inner z-10 shrink-0">
+          {badgeIcon}
+        </div>
+        <div className="flex-1 z-10 w-full text-center md:text-left">
+          <p className="text-white/80 font-bold uppercase tracking-wider text-sm mb-1">Current Rank</p>
+          <h2 className="text-3xl font-black mb-3">LV.{level} {levelName}</h2>
+          
+          <div className="w-full bg-black/20 rounded-full h-3 mb-2 backdrop-blur-sm overflow-hidden">
+            <div className="bg-white h-3 rounded-full transition-all duration-1000" style={{ width: `${progressPct}%` }}></div>
+          </div>
+          <div className="flex justify-between text-xs font-bold text-white/90">
+            <span>{user.points} pts</span>
+            <span>{level === 3 ? 'MAX LEVEL' : `${nextLevelPts} pts`}</span>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
@@ -191,7 +239,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Reward 1 */}
-          <div className="bg-white border border-slate-200 p-5 rounded-2xl flex items-center justify-between hover:border-amber-300 transition">
+          <div className="bg-white border border-slate-200 p-5 rounded-2xl flex items-center justify-between hover:border-amber-300 hover:scale-[1.02] hover:shadow-xl transition-all cursor-pointer">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 text-xl">🛍️</div>
               <div>
@@ -208,7 +256,7 @@ export default function Dashboard() {
           </div>
           
           {/* Reward 2 */}
-          <div className="bg-white border border-slate-200 p-5 rounded-2xl flex items-center justify-between hover:border-blue-300 transition">
+          <div className="bg-white border border-slate-200 p-5 rounded-2xl flex items-center justify-between hover:border-blue-300 hover:scale-[1.02] hover:shadow-xl transition-all cursor-pointer">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-xl">🚌</div>
               <div>

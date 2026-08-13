@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Loader2, Sparkles, Mic, Volume2, VolumeX } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,6 +10,7 @@ export default function Chatbot() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -58,7 +60,10 @@ export default function Chatbot() {
     
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = 'th-TH';
-    utterance.rate = 1.1; // Slightly faster
+    
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
     
     window.speechSynthesis.speak(utterance);
   };
@@ -95,7 +100,9 @@ export default function Chatbot() {
       speakText(aiReply);
       
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'ai', text: 'ขออภัยครับ ระบบแชทขัดข้องชั่วคราว ลองใหม่อีกครั้งนะครับ' }]);
+      console.error(err);
+      toast.error("การเชื่อมต่อแชทขัดข้อง", { description: err.message });
+      setMessages(prev => [...prev, { role: 'ai', text: 'ขออภัยครับ ระบบแชทขัดข้องชั่วคราว ('+err.message+') ลองใหม่อีกครั้งนะครับ' }]);
     } finally {
       setLoading(false);
     }
@@ -103,6 +110,16 @@ export default function Chatbot() {
 
   return (
     <>
+      <style>{`
+        .soundwave { display: flex; align-items: center; gap: 2px; height: 16px; }
+        .bar { width: 3px; height: 100%; background: #3b82f6; animation: grow 1s ease-in-out infinite; }
+        .bar:nth-child(2) { animation-delay: 0.2s; }
+        .bar:nth-child(3) { animation-delay: 0.4s; }
+        .bar:nth-child(4) { animation-delay: 0.6s; }
+        .bar:nth-child(5) { animation-delay: 0.8s; }
+        @keyframes grow { 0%, 100% { height: 4px; } 50% { height: 16px; } }
+      `}</style>
+
       {/* Chat Button */}
       <button
         onClick={() => setIsOpen(true)}
@@ -151,7 +168,6 @@ export default function Chatbot() {
           {/* Messages Area */}
           <div className="flex-1 p-4 overflow-y-auto bg-slate-50/50 space-y-4">
             {messages.map((msg, i) => {
-              // Basic markdown formatting for bold (**)
               const formatText = (text) => {
                 const parts = text.split(/(\*\*.*?\*\*)/g);
                 return parts.map((part, index) => {
@@ -186,30 +202,52 @@ export default function Chatbot() {
           </div>
 
           {/* Input Area */}
-          <form onSubmit={handleSend} className="p-3 bg-white border-t border-slate-100 flex gap-2 shrink-0">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="พิมพ์ถาม AI ได้เลย..."
-              className="flex-1 bg-slate-100 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-            <button
-              type="button"
-              onClick={toggleListen}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
-              title="พิมพ์ด้วยเสียง"
-            >
-              <Mic className="w-4 h-4" />
-            </button>
-            <button 
-              type="submit" 
-              disabled={!input.trim() || loading}
-              className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition disabled:opacity-50"
-            >
-              <Send className="w-4 h-4 ml-0.5" />
-            </button>
-          </form>
+          <div className="p-3 bg-white border-t border-slate-100 flex flex-col gap-2 shrink-0">
+            {/* Visualizer Row */}
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2 h-6">
+                {(isListening || isSpeaking) && (
+                  <>
+                    <div className="soundwave text-blue-500">
+                      <div className="bar"></div>
+                      <div className="bar"></div>
+                      <div className="bar"></div>
+                      <div className="bar"></div>
+                      <div className="bar"></div>
+                    </div>
+                    <span className="text-[10px] font-bold text-blue-500 animate-pulse">
+                      {isListening ? "กำลังฟังเสียงคุณ..." : "AI กำลังพูด..."}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <form onSubmit={handleSend} className="flex gap-2 w-full">
+              <button
+                type="button"
+                onClick={toggleListen}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition shrink-0 ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                title="พิมพ์ด้วยเสียง"
+              >
+                <Mic className="w-4 h-4" />
+              </button>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="พิมพ์ถาม AI ได้เลย..."
+                className="flex-1 bg-slate-100 border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <button 
+                type="submit" 
+                disabled={!input.trim() || loading}
+                className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition disabled:opacity-50 shrink-0"
+              >
+                <Send className="w-4 h-4 ml-0.5" />
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plane, Coffee, Trees, Wallet, MapPin, Loader2, Users, CalendarDays } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -79,8 +80,13 @@ export default function Onboarding() {
     setLoading(true);
     
     try {
+      // Set a 60-second timeout for the AI request (Ollama generation can take time)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+
       const response = await fetch('http://localhost:3000/api/trips/generate', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -95,6 +101,7 @@ export default function Onboarding() {
         })
       });
       const data = await response.json();
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error(data.error || data.details || 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์');
@@ -102,11 +109,68 @@ export default function Onboarding() {
       
       setLoading(false);
       // ส่งต่อข้อมูลไปหน้า Itinerary พร้อมกับ province
-      navigate('/itinerary', { state: { plan: data.plan || data.fullPlan || data.itinerary, province: formData.province } });
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
-      alert('เกิดข้อผิดพลาด: ' + error.message + '\n\nกรุณาตรวจสอบว่าเซิร์ฟเวอร์ Backend (3000) และ AI (8000) รันอยู่ และคุณได้ Seed Database แล้ว');
+      navigate('/itinerary', { state: { plan: data.plan || data, province: formData.province } });
+    } catch (err) {
+      console.error(err);
+      toast.warning("ระบบ AI ขัดข้องชั่วคราว", { 
+        description: `ข้อผิดพลาด: ${err.message}. สลับเป็นโหมดข้อมูลจำลอง (Mock Data) อัตโนมัติ`
+      });
+      
+      // FALLBACK AI: If timeout or server crash, use this beautiful mock data
+      const mockFallbackPlan = {
+        summary: {
+          total_budget_estimate: 2500,
+          eco_score_percentage: 85
+        },
+        plan: [
+          {
+            day: 1,
+            itinerary: [
+              {
+                time: "09:00",
+                location: "สถาบันวิทยาศาสตร์ทางทะเล ม.บูรพา",
+                description: "เริ่มต้นทริปด้วยการเดินชมโลกใต้ทะเลหลบแดดตอนเช้า แอร์เย็นสบาย เหมาะกับทุกวัย",
+                type: "เที่ยว",
+                crowded_level: "ปานกลาง",
+                is_otop: false,
+                travel_to_next: { mode: "รถยนต์ส่วนตัว (EV)", duration: "10 นาที", eco_tip: "ขับรถช้าๆ ประหยัดแบตเตอรี่" }
+              },
+              {
+                time: "11:30",
+                location: "ร้านอาหารทะเลป้าแจ๋ว อ่างศิลา",
+                description: "แวะทานซีฟู้ดสดๆ บรรยากาศริมทะเล สนับสนุนประมงพื้นบ้าน (OTOP)",
+                type: "กิน",
+                crowded_level: "สูง",
+                is_otop: true,
+                travel_to_next: { mode: "เดินเท้า", duration: "15 นาที", eco_tip: "เดินย่อยอาหารริมทะเล ลดคาร์บอน 100%" }
+              },
+              {
+                time: "14:00",
+                location: "Way Coffee House",
+                description: "พักจิบกาแฟที่คาเฟ่ไม้สไตล์ญี่ปุ่นริมทะเลสุดฮิต มุมถ่ายรูปเยอะมาก",
+                type: "กิน",
+                crowded_level: "ปานกลาง",
+                is_otop: false,
+                travel_to_next: { mode: "รถสองแถวท้องถิ่น", duration: "20 นาที", eco_tip: "ใช้ขนส่งสาธารณะช่วยกระจายรายได้และลดคาร์บอน" }
+              },
+              {
+                time: "16:30",
+                location: "เขาสามมุข",
+                description: "ขึ้นเขาชมจุดชมวิวแบบพานอรามา และดูพระอาทิตย์ตกดิน",
+                type: "เที่ยว",
+                crowded_level: "ต่ำ",
+                is_otop: false
+              }
+            ]
+          }
+        ]
+      };
+      
+      // Simulate slight delay if it failed quickly
+      setTimeout(() => {
+        setLoading(false);
+        navigate('/itinerary', { state: { plan: mockFallbackPlan, province: formData.province } });
+      }, 1000);
     }
   };
 

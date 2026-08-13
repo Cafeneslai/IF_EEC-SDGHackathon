@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import Chatbot from './components/Chatbot';
 import PDPABanner from './components/PDPABanner';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Toaster, toast } from 'sonner';
 
 const PageTransition = ({ children }) => (
   <motion.div
@@ -26,6 +27,28 @@ function AppContent() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const location = useLocation();
   const [user, setUser] = useState(null);
+  const secretClicks = React.useRef([]);
+
+  const handleSecretClick = (e) => {
+    const now = Date.now();
+    secretClicks.current.push(now);
+    secretClicks.current = secretClicks.current.filter(t => now - t < 2000);
+    
+    if (secretClicks.current.length >= 3) {
+      e.preventDefault(); // Prevent navigation on the 3rd click just in case
+      localStorage.setItem('forceAqi', 'true');
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        const user = JSON.parse(savedUser);
+        user.points = 10000;
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+      toast.success('🔥 Secret Demo Mode Activated!', {
+        description: '- 10,000 SDG Points Granted\n- AQI Alert Forced ON'
+      });
+      secretClicks.current = [];
+    }
+  };
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -66,7 +89,7 @@ function AppContent() {
         <div className="max-w-7xl mx-auto px-6 py-3.5 flex justify-between items-center gap-4">
           
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 cursor-pointer group shrink-0">
+          <Link to="/" onClick={handleSecretClick} className="flex items-center space-x-3 cursor-pointer group shrink-0">
             <div className="theme-bg-gradient p-2.5 rounded-2xl text-white text-lg flex items-center justify-center w-10 h-10 shadow-lg group-hover:scale-105 transition">
               <i className="fa-solid fa-compass"></i>
             </div>
@@ -173,6 +196,9 @@ function AppContent() {
 
       {/* PDPA Banner */}
       <PDPABanner />
+      
+      {/* Sonner Toaster */}
+      <Toaster position="top-center" richColors />
     </div>
   );
 }
