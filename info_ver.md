@@ -1,6 +1,15 @@
 # 📦 EEC GoFlow - Version Info & Changelog
 
-## 🚀 Version 5.0 (Pitching Ready - The WOW Update)
+## 🛡️ Version 6.0 (Smart GPS & System Stabilizer)
+*Date: August 2026*
+
+**Major Enhancements:**
+- 🌍 **Real-time Geocoding:** Replaced hardcoded fallback center points with a live OpenStreetMap (Nominatim) Geocoding integration, placing AI-generated locations precisely on the map.
+- 🎯 **Smart Inland Jitter Algorithm:** Developed a mathematical deterministic offset function for unknown AI locations, specifically tuned to prevent map markers from stacking or landing in the ocean.
+- 📍 **Geolocation GPS:** Added "My Location" feature to physically zoom into the user's actual latitude and longitude upon consent.
+- 🐞 **Critical Bug Hunt (Phase 6):** Conducted a codebase-wide audit using `oxlint`. Fixed the HTML5 Drag & Drop event bindings in `ItineraryCard` to restore functionality. Cleaned up unused imports to optimize bundle size.
+
+---## 🚀 Version 5.0 (Pitching Ready - The WOW Update)
 *Date: August 2026*
 
 **Major Features Added (The WOW Factors):**

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Navigation, Clock, Sunrise, Sun, Sunset, AlertCircle, CalendarX2, CloudSun, Wallet, Leaf, RefreshCw, Loader2, Share2, CheckCircle2, Users, Compass, QrCode, ScanEye } from 'lucide-react';
+import { MapPin, Clock, Sunrise, Sun, Sunset, CalendarX2, CloudSun, Wallet, Leaf, RefreshCw, Loader2, CheckCircle2, Users, Compass, QrCode, ScanEye } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 import * as htmlToImage from 'html-to-image';
 import { toast } from 'sonner';
@@ -150,7 +150,7 @@ export default function Itinerary() {
     e.dataTransfer.effectAllowed = "move";
   };
 
-  const handleDragOver = (e, index) => {
+  const handleDragOver = (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
   };
@@ -468,9 +468,13 @@ function ItineraryCard({ data, onRegenerate, index, onDragStart, onDragOver, onD
 
   return (
     <div 
-      className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active"
+      className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active cursor-grab active:cursor-grabbing"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      draggable={true}
+      onDragStart={(e) => onDragStart(e, index)}
+      onDragOver={(e) => onDragOver(e)}
+      onDrop={(e) => onDrop(e, index)}
     >
       <div className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-white/80 bg-white shadow-lg shadow-blue-500/20 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:bg-blue-50 group-hover:border-blue-200 group-hover:shadow-blue-400/40">
         <div className="text-slate-600 group-hover:text-blue-600 transition-colors">

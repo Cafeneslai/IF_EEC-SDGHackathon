@@ -33,3 +33,10 @@ Thumbs.db
 *.swp
 .windsurf/
 .claude/
+
+# Pitch & Documentation
+pitch_docs/
+bug.md
+work_time.md
+work.md
+

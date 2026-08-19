@@ -57,7 +57,6 @@
    - **หน้าที่:** สมองกลประมวลผล Prompt, วิเคราะห์ข้อมูล และคืนค่ากลับมาเป็นรูปแบบ JSON (พร้อมระบบ Auto-Retry หากตอบกลับผิดรูปแบบ)
 
 ---
-
 ## 🚀 วิธีการติดตั้งและรันโปรเจกต์ (Getting Started)
 
 ### 📋 สิ่งที่ต้องมีในเครื่อง (Prerequisites)
@@ -121,4 +120,4 @@ npm run dev
 
 ---
 
-*Made with 💚 for Sustainable Tourism in Thailand.*
+*Made with DMI Lab💚 for Sustainable Tourism in Thailand.*
